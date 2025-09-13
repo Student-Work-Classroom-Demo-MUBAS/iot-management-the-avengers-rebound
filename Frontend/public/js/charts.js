@@ -1,14 +1,17 @@
-// Initialize charts
+// Initialize charts and real-time updates
 document.addEventListener('DOMContentLoaded', function() {
+    // Connect to Socket.io
+    const socket = io();
+
     // Energy Consumption Chart
     const energyCtx = document.getElementById('energyChart').getContext('2d');
     const energyChart = new Chart(energyCtx, {
         type: 'line',
         data: {
-            labels: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00'],
+            labels: [],
             datasets: [{
                 label: 'Current (A)',
-                data: [2.1, 1.8, 3.2, 4.5, 5.2, 4.8],
+                data: [],
                 borderColor: '#0a2342',
                 backgroundColor: 'rgba(10, 35, 66, 0.1)',
                 tension: 0.4,
@@ -113,23 +116,93 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.getElementById('temperature').innerText = data.temperature;
                 document.getElementById('light-level').innerText = data.light;
                 document.getElementById('energy-today').innerText = data.energy;
-                
-                // Update charts with new data
-                const newData = energyChart.data.datasets[0].data.map(() => Math.random() * 3 + 2);
-                energyChart.data.datasets[0].data = newData;
-                energyChart.update('none');
             })
             .catch(error => console.error('Error fetching data:', error));
     }
 
-    // Simulate real-time data updates every 5 seconds
-    setInterval(updateDashboardValues, 5000);
+    // Function to update energy chart
+    function updateEnergyChart() {
+        fetch('/api/energy-data')
+            .then(response => response.json())
+            .then(data => {
+                energyChart.data.labels = data.labels;
+                energyChart.data.datasets[0].data = data.data;
+                energyChart.update();
+            })
+            .catch(error => console.error('Error fetching energy data:', error));
+    }
+
+    // Listen for real-time sensor updates
+    socket.on('sensor-update', function(data) {
+        console.log('Sensor update received:', data);
+        
+        // Update the appropriate card based on sensor type
+        switch(data.sensorType) {
+            case 'current':
+                document.getElementById('current-usage').innerText = `${data.value} ${data.unit}`;
+                break;
+            case 'temperature':
+                document.getElementById('temperature').innerText = `${data.value}${data.unit}`;
+                break;
+            case 'light':
+                document.getElementById('light-level').innerText = `${data.value} ${data.unit}`;
+                break;
+            case 'energy':
+                document.getElementById('energy-today').innerText = `${data.value} ${data.unit}`;
+                // Update the energy chart when new energy data arrives
+                updateEnergyChart();
+                break;
+        }
+    });
+
+    // Listen for device status updates
+    socket.on('device-update', function(device) {
+        console.log('Device update received:', device);
+        // In a real application, you would update the device table
+        // For simplicity, we'll just refresh the page to show updated data
+        location.reload();
+    });
+
+    // Initial data load
+    updateDashboardValues();
+    updateEnergyChart();
 
     // Add interaction to chart buttons
     document.querySelectorAll('.chart-btn').forEach(button => {
         button.addEventListener('click', function() {
             document.querySelectorAll('.chart-btn').forEach(btn => btn.classList.remove('active'));
             this.classList.add('active');
+            
+            // In a real application, you would fetch data for the selected time period
+            // For now, we'll just update the current chart
+            updateEnergyChart();
+        });
+    });
+
+    // Add event listeners for device control buttons
+    document.querySelectorAll('.device-control').forEach(button => {
+        button.addEventListener('click', function() {
+            const deviceId = this.dataset.deviceId;
+            const action = this.dataset.action;
+            
+            if (action === 'toggle') {
+                const currentStatus = this.dataset.status;
+                const newStatus = currentStatus === 'ON' ? 'OFF' : 'ON';
+                
+                fetch(`/api/device/${deviceId}/status`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ status: newStatus })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Device status updated:', data);
+                    // The socket.io event will trigger a page refresh
+                })
+                .catch(error => console.error('Error updating device status:', error));
+            }
         });
     });
 });

@@ -156,9 +156,11 @@
                             <%= device.status %>
                         </span>
                     </td>
-                    <td>
                         <button class="action-btn edit-btn"><i class="fas fa-edit"></i></button>
                         <button class="action-btn delete-btn"><i class="fas fa-trash"></i></button>
+                        <button class="device-control" data-device-id="<%= device._id %>" data-action="toggle" data-status="<%= device.status %>">
+                        <i class="fas fa-power-off"></i>
+                        </button>
                     </td>
                 </tr>
                 <% }); %>
