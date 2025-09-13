@@ -1,0 +1,170 @@
+<%- include('partials/header') %>
+<%- include('partials/sidebar') %>
+
+<!-- Main Content -->
+<div class="main-content">
+    <div class="header">
+        <div class="page-title">
+            <h2>Home Energy Dashboard</h2>
+            <p>Monitor and manage your home's energy consumption</p>
+        </div>
+        <div class="search-bar">
+            <i class="fas fa-search"></i>
+            <input type="text" placeholder="Search devices, rooms...">
+        </div>
+        <div class="user-info">
+            <div class="notifications">
+                <i class="fas fa-bell"></i>
+                <span class="notification-badge">3</span>
+            </div>
+            <div class="user-details">
+                <img src="<%= data.user.image %>" alt="User">
+                <div>
+                    <div class="user-name"><%= data.user.name %></div>
+                    <div class="user-role"><%= data.user.role %></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Cards -->
+    <div class="dashboard-cards">
+        <div class="card current">
+            <div class="card-header">
+                <div class="card-title">Current Usage</div>
+                <div class="card-icon current-icon">
+                    <i class="fas fa-bolt"></i>
+                </div>
+            </div>
+            <div class="card-value" id="current-usage"><%= data.cards.currentUsage.value %></div>
+            <div class="card-footer">
+                <span>From last hour</span>
+                <span class="trend <%= data.cards.currentUsage.trend %>">
+                    <i class="fas fa-arrow-<%= data.cards.currentUsage.trend %>"></i> 
+                    <%= data.cards.currentUsage.trendValue %>
+                </span>
+            </div>
+        </div>
+
+        <div class="card temp">
+            <div class="card-header">
+                <div class="card-title">Temperature</div>
+                <div class="card-icon temp-icon">
+                    <i class="fas fa-temperature-high"></i>
+                </div>
+            </div>
+            <div class="card-value" id="temperature"><%= data.cards.temperature.value %></div>
+            <div class="card-footer">
+                <span>Indoor</span>
+                <span>Humidity: <%= data.cards.temperature.humidity %></span>
+            </div>
+        </div>
+
+        <div class="card light">
+            <div class="card-header">
+                <div class="card-title">Light Level</div>
+                <div class="card-icon light-icon">
+                    <i class="fas fa-sun"></i>
+                </div>
+            </div>
+            <div class="card-value" id="light-level"><%= data.cards.lightLevel.value %></div>
+            <div class="card-footer">
+                <span><%= data.cards.lightLevel.location %></span>
+                <span><%= data.cards.lightLevel.status %></span>
+            </div>
+        </div>
+
+        <div class="card energy">
+            <div class="card-header">
+                <div class="card-title">Energy Today</div>
+                <div class="card-icon energy-icon">
+                    <i class="fas fa-plug"></i>
+                </div>
+            </div>
+            <div class="card-value" id="energy-today"><%= data.cards.energyToday.value %></div>
+            <div class="card-footer">
+                <span>Estimated cost: <%= data.cards.energyToday.cost %></span>
+                <span class="trend <%= data.cards.energyToday.trend %>">
+                    <i class="fas fa-arrow-<%= data.cards.energyToday.trend %>"></i> 
+                    <%= data.cards.energyToday.trendValue %>
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="charts">
+        <div class="chart-container">
+            <div class="chart-header">
+                <div class="chart-title">Energy Consumption - Last 24 Hours</div>
+                <div class="chart-actions">
+                    <button class="chart-btn active">Day</button>
+                    <button class="chart-btn">Week</button>
+                    <button class="chart-btn">Month</button>
+                </div>
+            </div>
+            <canvas id="energyChart" height="300"></canvas>
+        </div>
+        <div class="chart-container">
+            <div class="chart-header">
+                <div class="chart-title">Sensor Data Distribution</div>
+                <div class="chart-actions">
+                    <button class="chart-btn active">Now</button>
+                    <button class="chart-btn">Avg</button>
+                </div>
+            </div>
+            <canvas id="sensorChart" height="300"></canvas>
+        </div>
+    </div>
+
+    <!-- Devices Section -->
+    <div class="devices-container">
+        <div class="devices-header">
+            <div class="devices-title">Connected Appliances</div>
+            <button class="btn">
+                <i class="fas fa-plus"></i> Add Device
+            </button>
+        </div>
+        <table class="device-table">
+            <thead>
+                <tr>
+                    <th>Device</th>
+                    <th>Location</th>
+                    <th>Power</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% data.devices.forEach(function(device) { %>
+                <tr>
+                    <td>
+                        <div class="device-info">
+                            <div class="device-icon">
+                                <i class="<%= device.icon %>"></i>
+                            </div>
+                            <div>
+                                <div class="device-name"><%= device.name %></div>
+                                <div class="device-location"><%= device.model %></div>
+                            </div>
+                        </div>
+                    </td>
+                    <td><%= device.location %></td>
+                    <td><%= device.power %></td>
+                    <td>
+                        <span class="status status-<%= device.status.toLowerCase() %>">
+                            <%= device.status %>
+                        </span>
+                    </td>
+                    <td>
+                        <button class="action-btn edit-btn"><i class="fas fa-edit"></i></button>
+                        <button class="action-btn delete-btn"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>
+                <% }); %>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<%- include('partials/footer') %>
