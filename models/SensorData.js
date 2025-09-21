@@ -1,15 +1,50 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const { sequelize } = require('../config/database');
 
-const sensorDataSchema = new mongoose.Schema({
-  sensorType: { 
-    type: String, 
-    enum: ['current', 'temperature', 'humidity', 'light', 'energy'], 
-    required: true 
+const SensorData = sequelize.define('SensorData', {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true
   },
-  value: { type: Number, required: true },
-  unit: { type: String, required: true },
-  timestamp: { type: Date, default: Date.now },
-  location: { type: String, required: true }
+  sensorId: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: {
+      model: 'sensors',
+      key: 'id'
+    }
+  },
+  value: {
+    type: DataTypes.FLOAT,
+    allowNull: false
+  },
+  unit: {
+    type: DataTypes.STRING(20),
+    allowNull: false
+  },
+  location: {
+    type: DataTypes.STRING(100),
+    allowNull: false
+  },
+  timestamp: {
+    type: DataTypes.DATE,
+    allowNull: false,
+    defaultValue: DataTypes.NOW
+  }
+}, {
+  tableName: 'sensor_data',
+  indexes: [
+    {
+      fields: ['sensorId']
+    },
+    {
+      fields: ['timestamp']
+    },
+    {
+      fields: ['sensorId', 'timestamp']
+    }
+  ]
 });
 
-module.exports = mongoose.model('SensorData', sensorDataSchema);
+module.exports = SensorData;

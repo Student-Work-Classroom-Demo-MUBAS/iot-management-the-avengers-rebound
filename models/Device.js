@@ -1,13 +1,49 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const { sequelize } = require('../config/database');
 
-const deviceSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  model: { type: String, required: true },
-  location: { type: String, required: true },
-  power: { type: String, required: true },
-  status: { type: String, enum: ['ON', 'OFF'], required: true },
-  icon: { type: String, required: true },
-  lastUpdated: { type: Date, default: Date.now }
+const Device = sequelize.define('Device', {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true
+  },
+  name: {
+    type: DataTypes.STRING(100),
+    allowNull: false
+  },
+  model: {
+    type: DataTypes.STRING(100),
+    allowNull: false
+  },
+  location: {
+    type: DataTypes.STRING(100),
+    allowNull: false
+  },
+  power: {
+    type: DataTypes.STRING(20),
+    allowNull: false
+  },
+  status: {
+    type: DataTypes.ENUM('ON', 'OFF'),
+    allowNull: false,
+    defaultValue: 'OFF'
+  },
+  icon: {
+    type: DataTypes.STRING(50),
+    allowNull: false
+  },
+  createdAt: {
+    type: DataTypes.DATE,
+    allowNull: false,
+    defaultValue: DataTypes.NOW
+  },
+  updatedAt: {
+    type: DataTypes.DATE,
+    allowNull: false,
+    defaultValue: DataTypes.NOW
+  }
+}, {
+  tableName: 'devices'
 });
 
-module.exports = mongoose.model('Device', deviceSchema);
+module.exports = Device;

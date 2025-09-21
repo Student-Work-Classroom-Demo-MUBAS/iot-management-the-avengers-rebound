@@ -1,19 +1,23 @@
 const express = require('express');
 const router = express.Router();
-const SensorData = require('../models/SensorData');
-const Device = require('../models/Device');
+const { Sensor, SensorData, Device } = require('../models');
+const { validateSensorData } = require('../middleware/validation');
 
 // GET energy data for charts
 router.get('/energy-data', async (req, res) => {
   try {
-    // Get energy data for the last 24 hours
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    const energyData = await SensorData.find({
-      sensorType: 'energy',
-      timestamp: { $gte: twentyFourHoursAgo }
-    }).sort({ timestamp: 1 });
+    
+    const energyData = await SensorData.findAll({
+      where: {
+        sensorId: 1, // Assuming sensorId 1 is for energy
+        timestamp: {
+          [Sequelize.Op.gte]: twentyFourHoursAgo
+        }
+      },
+      order: [['timestamp', 'ASC']]
+    });
 
-    // Format data for chart
     const labels = energyData.map(item => {
       const date = new Date(item.timestamp);
       return `${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`;
@@ -28,51 +32,39 @@ router.get('/energy-data', async (req, res) => {
   }
 });
 
-// GET current sensor values
-router.get('/current-values', async (req, res) => {
-  try {
-    // Get latest readings for all sensors
-    const currentData = await SensorData.findOne({ sensorType: 'current' }).sort({ timestamp: -1 });
-    const tempData = await SensorData.findOne({ sensorType: 'temperature' }).sort({ timestamp: -1 });
-    const lightData = await SensorData.findOne({ sensorType: 'light' }).sort({ timestamp: -1 });
-    const energyData = await SensorData.findOne({ sensorType: 'energy' }).sort({ timestamp: -1 });
-
-    const currentValues = {
-      current: `${currentData ? currentData.value.toFixed(1) : 0} ${currentData ? currentData.unit : 'A'}`,
-      temperature: `${tempData ? tempData.value.toFixed(1) : 0}${tempData ? tempData.unit : '°C'}`,
-      light: `${lightData ? lightData.value.toFixed(0) : 0} ${lightData ? lightData.unit : 'lux'}`,
-      energy: `${energyData ? energyData.value.toFixed(1) : 0} ${energyData ? energyData.unit : 'kWh'}`
-    };
-    
-    res.json(currentValues);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Server error' });
-  }
-});
-
 // POST receive sensor data
-router.post('/sensor-data', async (req, res) => {
+router.post('/sensor-data', validateSensorData, async (req, res) => {
   try {
     const { sensorType, value, unit, location } = req.body;
     
-    // Validate input
-    if (!sensorType || value === undefined || !unit || !location) {
-      return res.status(400).json({ error: 'Missing required fields' });
-    }
-
-    // Create new sensor data record
-    const sensorData = new SensorData({
-      sensorType,
+    // Find or create sensor
+    const [sensor] = await Sensor.findOrCreate({
+      where: { type: sensorType, location },
+      defaults: {
+        name: `${sensorType} Sensor`,
+        unit,
+        calibrationFactor: 1.0
+      }
+    });
+    
+    // Update sensor last reading
+    await Sensor.update({
+      lastReading: new Date(),
+      lastValue: value
+    }, {
+      where: { id: sensor.id }
+    });
+    
+    // Create sensor data record
+    const sensorData = await SensorData.create({
+      sensorId: sensor.id,
       value,
       unit,
       location,
       timestamp: new Date()
     });
-
-    await sensorData.save();
     
-    // Emit real-time update to all connected clients
+    // Emit real-time update
     req.app.get('io').emit('sensor-update', {
       sensorType,
       value,
@@ -98,20 +90,17 @@ router.put('/device/:id/status', async (req, res) => {
       return res.status(400).json({ error: 'Invalid status value' });
     }
 
-    const device = await Device.findByIdAndUpdate(
-      id,
-      { 
-        status,
-        lastUpdated: new Date()
-      },
-      { new: true }
-    );
-
+    const device = await Device.findByPk(id);
+    
     if (!device) {
       return res.status(404).json({ error: 'Device not found' });
     }
+    
+    device.status = status;
+    device.updatedAt = new Date();
+    await device.save();
 
-    // Emit real-time update to all connected clients
+    // Emit real-time update
     req.app.get('io').emit('device-update', device);
 
     res.json(device);
