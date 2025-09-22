@@ -96,104 +96,6 @@ const swaggerDefinition = {
           }
         },
         required: ['name', 'model', 'location', 'power', 'status', 'icon']
-      },
-      User: {
-        type: 'object',
-        properties: {
-          name: {
-            type: 'string',
-            description: 'User full name'
-          },
-          email: {
-            type: 'string',
-            format: 'email',
-            description: 'User email address'
-          },
-          role: {
-            type: 'string',
-            enum: ['admin', 'user'],
-            description: 'User role'
-          },
-          image: {
-            type: 'string',
-            description: 'URL to user profile image'
-          }
-        },
-        required: ['name', 'email', 'role']
-      },
-      Error: {
-        type: 'object',
-        properties: {
-          error: {
-            type: 'string',
-            description: 'Error message'
-          },
-          details: {
-            type: 'array',
-            items: {
-              type: 'object',
-              properties: {
-                field: {
-                  type: 'string',
-                  description: 'Field that caused the error'
-                },
-                message: {
-                  type: 'string',
-                  description: 'Error message for the field'
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    responses: {
-      UnauthorizedError: {
-        description: 'Access token is missing or invalid',
-        content: {
-          'application/json': {
-            schema: {
-              $ref: '#/components/schemas/Error'
-            },
-            example: {
-              error: 'Unauthorized',
-              message: 'No authorization token was found'
-            }
-          }
-        }
-      },
-      ValidationError: {
-        description: 'Validation error',
-        content: {
-          'application/json': {
-            schema: {
-              $ref: '#/components/schemas/Error'
-            },
-            example: {
-              error: 'Validation failed',
-              details: [
-                {
-                  field: 'sensorType',
-                  message: 'Sensor type is required'
-                }
-              ]
-            }
-          }
-        }
-      },
-      NotFoundError: {
-        description: 'Resource not found',
-        content: {
-          'application/json': {
-            schema: {
-              $ref: '#/components/schemas/Error'
-            },
-            example: {
-              error: 'Not found',
-              message: 'Device with id 123 not found'
-            }
-          }
-        }
       }
     }
   },
@@ -209,10 +111,6 @@ const swaggerDefinition = {
     {
       name: 'Energy',
       description: 'Endpoints for energy data and analytics'
-    },
-    {
-      name: 'Authentication',
-      description: 'Endpoints for user authentication'
     }
   ]
 };
@@ -220,11 +118,9 @@ const swaggerDefinition = {
 // Options for the swagger docs
 const options = {
   swaggerDefinition,
-  // Paths to files containing OpenAPI definitions
   apis: [
     path.join(__dirname, '../routes/*.js'),
-    path.join(__dirname, '../models/*.js'),
-    path.join(__dirname, '../controllers/*.js')
+    path.join(__dirname, '../models/*.js')
   ]
 };
 
@@ -235,10 +131,10 @@ const swaggerSpec = swaggerJSDoc(options);
 const swaggerUiOptions = {
   customCss: '.swagger-ui .topbar { display: none }',
   customSiteTitle: 'Smart Home Energy API Documentation',
-  customfavIcon: '/favicon.ico',
   explorer: true
 };
 
+// Export the required objects
 module.exports = {
   swaggerUi,
   swaggerSpec,
