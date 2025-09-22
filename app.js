@@ -4,12 +4,16 @@ const http = require('http');
 const socketIo = require('socket.io');
 const { testConnection } = require('./config/database');
 const { swaggerUi, swaggerSpec } = require('./config/swagger');
+const swaggerUiOptions = { explorer: true };
 
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
 
 const port = process.env.PORT || 3000;
+
+//import model
+const {User, Device, Sensor, SensorData, EnergyUsage, syncDatabase} = require('./models');
 
 // Test database connection
 (async () => {
@@ -18,6 +22,9 @@ const port = process.env.PORT || 3000;
     console.error('Failed to connect to database. Exiting...');
     process.exit(1);
   }
+
+  //sync database (set force to true only in development to reset tables)
+  await syncDatabase(process.env.NODE_ENV === 'development');
 })();
 
 // Set up middleware
@@ -28,6 +35,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, swaggerUiOpti
 
 // Make io accessible to routes
 app.set('io', io);
+app.set('models', {User, Device, Sensor, SensorData, EnergyUsage});
 
 // Set EJS as the view engine
 app.set('view engine', 'ejs');

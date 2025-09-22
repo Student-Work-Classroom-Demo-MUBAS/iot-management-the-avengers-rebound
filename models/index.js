@@ -1,11 +1,11 @@
-const { sequelize } = require('../config/database');
+const { DataTypes } = require('sequelize');
 
 // Import models
 const User = require('./User');
-const Device = require('./Device');
-const Sensor = require('./Sensor');
-const SensorData = require('./SensorData');
-const EnergyUsage = require('./EnergyUsage');
+const Device = require('./Device')(sequalize, DataTypes);
+const Sensor = require('./Sensor')(sequalize, DataTypes);
+const SensorData = require('./SensorData')(sequalize, DataTypes);
+const EnergyUsage = require('./EnergyUsage')(sequalize, DataTypes);
 
 // Define associations
 Sensor.hasMany(SensorData, {
