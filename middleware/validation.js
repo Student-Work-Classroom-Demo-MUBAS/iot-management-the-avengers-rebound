@@ -1,12 +1,11 @@
 const Joi = require('joi');
-const { Types } = require('mongoose');
 
-// Custom validation for MongoDB ObjectId
+// Custom validation for MySQL numeric ID (assuming integer IDs)
 const objectId = (value, helpers) => {
-  if (!Types.ObjectId.isValid(value)) {
+  if (!Number.isInteger(Number(value)) || Number(value) <= 0) {
     return helpers.error('any.invalid');
   }
-  return value;
+  return Number(value);
 };
 
 // Custom validation for sensor values based on type
