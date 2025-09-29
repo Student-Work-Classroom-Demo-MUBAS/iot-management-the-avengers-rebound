@@ -89,7 +89,7 @@ app.use((req, res) => {
 
 // Start server
 server.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+  console.log(`Server running at http://localhost:${port}`);
   console.log(`API documentation available at http://localhost:${port}/api-docs`);
   if (process.env.NODE_ENV === 'development') {
     console.log(`Database initialization available at http://localhost:${port}/init-db`);
