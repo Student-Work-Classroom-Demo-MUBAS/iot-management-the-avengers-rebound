@@ -3,7 +3,7 @@ const express = require('express');
 const path = require('path');
 const http = require('http');
 const socketIo = require('socket.io');
-const { sequelize } = require('./config/database');
+const { testConnection } = require('./config/database');
 const { swaggerUi, swaggerSpec } = require('./config/swagger');
 const swaggerUiOptions = { explorer: true };
 
@@ -13,23 +13,19 @@ const io = socketIo(server);
 
 const port = process.env.PORT || 3000;
 
-// Import models
-const { User, Device, Sensor, SensorData } = require('./models');
+//import model
+const {User, Device, Sensor, SensorData, EnergyUsage, syncDatabase} = require('./models');
 
 // Test database connection
-
 (async () => {
-  try {
-    await sequelize.authenticate();
-    console.log('Connected to database successfully');
-  } catch (error) {
-    console.error('Failed to connect to database:', error);
+  const isConnected = await testConnection();
+  if (!isConnected) {
+    console.error('Failed to connect to database. Exiting...');
     process.exit(1);
   }
 
-  // Sync database (set force to true only in development to reset tables)
-  await sequelize.sync({ force: process.env.NODE_ENV === 'development' });
-  console.log('Database synced successfully');
+  //sync database (set force to true only in development to reset tables)
+  await syncDatabase(process.env.NODE_ENV === 'development');
 })();
 
 // Set up middleware
@@ -37,10 +33,11 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, swaggerUiOptions));
+app.use('/api/sensordata', require('./routes/sensordata'));
 
 // Make io accessible to routes
 app.set('io', io);
-app.set('models', {User, Device, Sensor, SensorData});
+app.set('models', {User, Device, Sensor, SensorData, EnergyUsage});
 
 // Set EJS as the view engine
 app.set('view engine', 'ejs');
