@@ -1,36 +1,12 @@
-// models/SensorData.js
 module.exports = (sequelize, DataTypes) => {
   return sequelize.define('SensorData', {
-    id: {
-      type: DataTypes.INTEGER,
-      primaryKey: true,
-      autoIncrement: true
-    },
-    sensorId: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      references: {
-        model: 'sensors',
-        key: 'id'
-      }
-    },
-    value: {
-      type: DataTypes.FLOAT,
-      allowNull: false
-    },
-    unit: {
-      type: DataTypes.STRING(20),
-      allowNull: false
-    },
-    location: {
-      type: DataTypes.STRING(100),
-      allowNull: false
-    },
-    timestamp: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: DataTypes.NOW
-    }
+    id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+    light_intensity: { type: DataTypes.FLOAT, allowNull: true },
+    temperature: { type: DataTypes.FLOAT, allowNull: true },
+    humidity: { type: DataTypes.FLOAT, allowNull: true },
+    current: { type: DataTypes.FLOAT, allowNull: true },
+    power: { type: DataTypes.FLOAT, allowNull: true },
+    timestamp: { type: DataTypes.BIGINT, allowNull: false }
   }, {
     tableName: 'sensor_data'
   });
