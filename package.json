@@ -1,0 +1,40 @@
+{
+  "name": "iot-management-the-avengers-rebound",
+  "version": "1.0.0",
+  "description": "[![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/hdU3h85s)\r # IoT Data Management System - Major Project Assignment",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Student-Work-Classroom-Demo-MUBAS/iot-management-the-avengers-rebound.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Student-Work-Classroom-Demo-MUBAS/iot-management-the-avengers-rebound/issues"
+  },
+  "homepage": "https://github.com/Student-Work-Classroom-Demo-MUBAS/iot-management-the-avengers-rebound#readme",
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "body-parser": "^2.2.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.2",
+    "ejs": "^3.1.10",
+    "express": "^5.1.0",
+    "joi": "^18.0.1",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.18.1",
+    "mysql2": "^3.15.0",
+    "sequelize": "^6.37.7",
+    "sequelize-cli": "^6.6.3",
+    "socket.io": "^4.8.1",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  }
+}
