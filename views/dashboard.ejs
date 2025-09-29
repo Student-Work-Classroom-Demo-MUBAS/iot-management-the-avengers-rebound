@@ -1,0 +1,22 @@
+<%- include('partials/header') %>
+<%- include('partials/sidebar') %>
+
+<div class="container">
+  <h1>Dashboard</h1>
+  <div>
+    <h2>User: <%= data.user ? data.user.name : 'N/A' %></h2>
+    <h3>Devices</h3>
+    <ul>
+      <% data.devices.forEach(function(device) { %>
+        <li><%= device.name %> - <%= device.status %></li>
+      <% }) %>
+    </ul>
+    <h3>Current Usage: <%= data.cards.currentUsage.value %></h3>
+    <h3>Temperature: <%= data.cards.temperature.value %></h3>
+    <h3>Humidity: <%= data.cards.temperature.humidity %></h3>
+    <h3>Light Level: <%= data.cards.lightLevel.value %></h3>
+    <h3>Energy Today: <%= data.cards.energyToday.value %></h3>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

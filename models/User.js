@@ -1,5 +1,6 @@
+// models/User.js
 module.exports = (sequelize, DataTypes) => {
-  const User = sequelize.define('User', {
+  return sequelize.define('User', {
     id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
@@ -8,9 +9,7 @@ module.exports = (sequelize, DataTypes) => {
     name: {
       type: DataTypes.STRING(100),
       allowNull: false,
-      validate: {
-        notEmpty: true
-      }
+      validate: { notEmpty: true }
     },
     role: {
       type: DataTypes.STRING(50),
@@ -21,10 +20,7 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING(100),
       allowNull: false,
       unique: true,
-      validate: {
-        isEmail: true,
-        notEmpty: true
-      }
+      validate: { isEmail: true, notEmpty: true }
     },
     password: {
       type: DataTypes.STRING(255),
@@ -39,13 +35,6 @@ module.exports = (sequelize, DataTypes) => {
     timestamps: true,
     createdAt: 'created_at',
     updatedAt: 'updated_at',
-    indexes: [
-      {
-        unique: true,
-        fields: ['email']
-      }
-    ]
+    indexes: [{ unique: true, fields: ['email'] }]
   });
-
-  return User;
 };

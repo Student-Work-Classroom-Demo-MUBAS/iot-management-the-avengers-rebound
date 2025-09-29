@@ -1,34 +1,15 @@
+const { sequelize } = require('../config/database');
 const { DataTypes } = require('sequelize');
 
-// Import models
-const User = require('./User');
-const Device = require('./Device')(sequalize, DataTypes);
-const Sensor = require('./Sensor')(sequalize, DataTypes);
-const SensorData = require('./SensorData')(sequalize, DataTypes);
-const EnergyUsage = require('./EnergyUsage')(sequalize, DataTypes);
+const User = require('./User')(sequelize, DataTypes);
+const Device = require('./Device')(sequelize, DataTypes);
+const Sensor = require('./Sensor')(sequelize, DataTypes);
+const SensorData = require('./SensorData')(sequelize, DataTypes);
+// const EnergyUsage = require('./EnergyUsage')(sequelize, DataTypes);
 
-// Define associations
-Sensor.hasMany(SensorData, {
-  foreignKey: 'sensorId',
-  as: 'readings'
-});
-
-SensorData.belongsTo(Sensor, {
-  foreignKey: 'sensorId',
-  as: 'sensor'
-});
-
-// Add other associations as needed
-
-// Sync models with database
-const syncDatabase = async (force = false) => {
-  try {
-    await sequelize.sync({ force });
-    console.log('Database synced successfully');
-  } catch (error) {
-    console.error('Error syncing database:', error);
-  }
-};
+// Associations
+Sensor.hasMany(SensorData, { foreignKey: 'sensorId', as: 'readings' });
+SensorData.belongsTo(Sensor, { foreignKey: 'sensorId', as: 'sensor' });
 
 module.exports = {
   sequelize,
@@ -36,6 +17,5 @@ module.exports = {
   Device,
   Sensor,
   SensorData,
-  EnergyUsage,
-  syncDatabase
+  // EnergyUsage
 };
