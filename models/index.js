@@ -11,11 +11,22 @@ const SensorData = require('./SensorData')(sequelize, DataTypes);
 Sensor.hasMany(SensorData, { foreignKey: 'sensorId', as: 'readings' });
 SensorData.belongsTo(Sensor, { foreignKey: 'sensorId', as: 'sensor' });
 
+// Add this function:
+async function syncDatabase(force = false) {
+  try {
+    await sequelize.sync({ force });
+    console.log('Database synced successfully');
+  } catch (error) {
+    console.error('Error syncing database:', error);
+  }
+}
+
 module.exports = {
   sequelize,
   User,
   Device,
   Sensor,
   SensorData,
-  // EnergyUsage
+  // EnergyUsage,
+  syncDatabase // <-- Export it here
 };
