@@ -1,64 +1,77 @@
 const express = require('express');
 const router = express.Router();
-const { User, Device, Sensor, SensorData } = require('../models');
 
-// Dashboard homepage
 router.get('/', async (req, res) => {
+  const { User, Device, Sensor, SensorData, sequelize } = req.app.get('models');
   try {
     const user = await User.findOne();
     const devices = await Device.findAll({ order: [['name', 'ASC']] });
-    const currentData = await SensorData.findOne({
-      include: [{ model: Sensor, as: 'sensor', where: { type: 'current' } }],
-      order: [['timestamp', 'DESC']]
+    const recentData = await SensorData.findAll({
+      order: [['createdAt', 'DESC']],
+      limit: 50
     });
-    const tempData = await SensorData.findOne({
-      include: [{ model: Sensor, as: 'sensor', where: { type: 'temperature' } }],
-      order: [['timestamp', 'DESC']]
-    });
-    const humidityData = await SensorData.findOne({
-      include: [{ model: Sensor, as: 'sensor', where: { type: 'humidity' } }],
-      order: [['timestamp', 'DESC']]
-    });
-    const lightData = await SensorData.findOne({
-      include: [{ model: Sensor, as: 'sensor', where: { type: 'light' } }],
-      order: [['timestamp', 'DESC']]
-    });
-    const energyData = await SensorData.findOne({
-      include: [{ model: Sensor, as: 'sensor', where: { type: 'energy' } }],
-      order: [['timestamp', 'DESC']]
+    const statistics = await SensorData.findOne({
+      attributes: [
+        [sequelize.fn('COUNT', sequelize.col('id')), 'total_records'],
+        [sequelize.fn('AVG', sequelize.col('light_intensity')), 'avg_light'],
+        [sequelize.fn('AVG', sequelize.col('temperature')), 'avg_temp'],
+        [sequelize.fn('AVG', sequelize.col('humidity')), 'avg_humidity'],
+        [sequelize.fn('AVG', sequelize.col('current')), 'avg_current'],
+        [sequelize.fn('AVG', sequelize.col('power')), 'avg_power'],
+        [sequelize.fn('MAX', sequelize.col('createdAt')), 'last_update']
+      ]
     });
 
-    const data = {
-      user: user,
-      cards: {
-        currentUsage: {
-          value: `${currentData ? currentData.value.toFixed(1) : 0} ${currentData ? currentData.unit : 'A'}`,
-          trend: "up",
-          trendValue: "12%"
-        },
-        temperature: {
-          value: `${tempData ? tempData.value.toFixed(1) : 0}${tempData ? tempData.unit : '°C'}`,
-          humidity: `${humidityData ? humidityData.value.toFixed(0) : 0}${humidityData ? humidityData.unit : '%'}`
-        },
-        lightLevel: {
-          value: `${lightData ? lightData.value.toFixed(0) : 0} ${lightData ? lightData.unit : 'lux'}`,
-          location: "Living Room",
-          status: "Optimal"
-        },
-        energyToday: {
-          value: `${energyData ? energyData.value.toFixed(1) : 0} ${energyData ? energyData.unit : 'kWh'}`,
-          cost: "$1.25",
-          trend: "down",
-          trendValue: "5%"
+    // Build the data object expected by your EJS template
+    res.render('dashboard', {
+      data: {
+        user: user ? user.get() : { name: 'Guest', role: 'User', image: '/default-user.png' },
+        devices: devices.map(d => d.get()),
+        cards: {
+          currentUsage: {
+            value: statistics ? statistics.get('avg_current')?.toFixed(3) + ' A' : '',
+            trend: 'up', // You can calculate trend if you want
+            trendValue: '+0.01'
+          },
+          temperature: {
+            value: statistics ? statistics.get('avg_temp')?.toFixed(2) + ' °C' : '',
+            humidity: statistics ? statistics.get('avg_humidity')?.toFixed(2) + ' %' : ''
+          },
+          lightLevel: {
+            value: statistics ? statistics.get('avg_light')?.toFixed(2) + ' lux' : '',
+            location: 'Living Room',
+            status: 'Normal'
+          },
+          energyToday: {
+            value: statistics ? statistics.get('avg_power')?.toFixed(2) + ' W' : '',
+            cost: '$0.50', // Placeholder, calculate if you want
+            trend: 'down',
+            trendValue: '-0.02'
+          }
         }
       },
-      devices: devices
-    };
-
-    res.render('dashboard', { data: data });
+      statistics: statistics ? statistics.get() : {},
+      sensorData: recentData.map(d => d.get()),
+      currentTime: new Date().toLocaleString()
+    });
   } catch (error) {
     console.error(error);
-    res.status(500).send('Server error');
+    res.render('dashboard', {
+      data: {
+        user: { name: 'Guest', role: 'User', image: '/default-user.png' },
+        devices: [],
+        cards: {
+          currentUsage: { value: 'N/A', trend: 'up', trendValue: '0' },
+          temperature: { value: 'N/A', humidity: 'N/A' },
+          lightLevel: { value: 'N/A', location: 'N/A', status: 'N/A' },
+          energyToday: { value: 'N/A', cost: '$0.00', trend: 'down', trendValue: '0' }
+        }
+      },
+      statistics: {},
+      sensorData: [],
+      currentTime: new Date().toLocaleString(),
+      error: 'Failed to load sensor data from database'
+    });
   }
 });
 

@@ -1,4 +1,3 @@
-
 const express = require('express');
 const path = require('path');
 const http = require('http');
@@ -37,7 +36,7 @@ app.use('/api/sensordata', require('./routes/sensordata'));
 
 // Make io accessible to routes
 app.set('io', io);
-app.set('models', {User, Device, Sensor, SensorData, EnergyUsage});
+app.set('models', { User, Device, Sensor, SensorData, EnergyUsage });
 
 // Set EJS as the view engine
 app.set('view engine', 'ejs');
