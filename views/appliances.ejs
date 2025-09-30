@@ -1,0 +1,118 @@
+<%- include('partials/header') %>
+<%- include('partials/sidebar') %>
+
+<div class="main-content">
+  <div class="header">
+    <div class="page-title">
+      <h2>Appliances</h2>
+      <p>Manage connected appliances, schedules, and energy profiles</p>
+    </div>
+    <div class="actions">
+      <button class="btn"><i class="fas fa-plus"></i> Add Appliance</button>
+    </div>
+  </div>
+
+  <div class="dashboard-cards">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Total devices</div>
+        <div class="card-icon"><i class="fas fa-plug"></i></div>
+      </div>
+      <div class="card-value"><%= data.appliances.count %></div>
+      <div class="card-footer">
+        <span>Online: <%= data.appliances.online %></span>
+        <span>Offline: <%= data.appliances.offline %></span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Energy today</div>
+        <div class="card-icon"><i class="fas fa-bolt"></i></div>
+      </div>
+      <div class="card-value"><%= data.appliances.energyToday %></div>
+      <div class="card-footer"><span>Cost: <%= data.appliances.costToday %></span></div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Alerts</div>
+        <div class="card-icon"><i class="fas fa-bell"></i></div>
+      </div>
+      <div class="card-value"><%= data.appliances.alertsCount %></div>
+      <div class="card-footer"><span>Last: <%= data.appliances.lastAlert %></span></div>
+    </div>
+  </div>
+
+  <div class="devices-container">
+    <div class="devices-header">
+      <div class="devices-title">Connected appliances</div>
+      <div class="filters">
+        <select>
+          <option>All Categories</option>
+          <% data.appliances.categories.forEach(function(c){ %>
+            <option><%= c %></option>
+          <% }) %>
+        </select>
+      </div>
+    </div>
+    <table class="device-table">
+      <thead>
+        <tr>
+          <th>Device</th>
+          <th>Location</th>
+          <th>Category</th>
+          <th>Power</th>
+          <th>Status</th>
+          <th>Schedule</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% data.appliances.devices.forEach(function(device){ %>
+          <tr>
+            <td>
+              <div class="device-info">
+                <div class="device-icon"><i class="<%= device.icon %>"></i></div>
+                <div>
+                  <div class="device-name"><%= device.name %></div>
+                  <div class="device-location"><%= device.model %></div>
+                </div>
+              </div>
+            </td>
+            <td><%= device.location %></td>
+            <td><%= device.category %></td>
+            <td><%= device.power %></td>
+            <td><span class="status status-<%= device.status.toLowerCase() %>"><%= device.status %></span></td>
+            <td><%= device.schedule || '—' %></td>
+            <td>
+              <button class="action-btn edit-btn"><i class="fas fa-edit"></i></button>
+              <button class="action-btn power-btn"><i class="fas fa-toggle-on"></i></button>
+              <button class="action-btn delete-btn"><i class="fas fa-trash"></i></button>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="devices-container">
+    <div class="devices-header">
+      <div class="devices-title">Schedules</div>
+    </div>
+    <div class="schedule-list">
+      <% data.appliances.schedules.forEach(function(s){ %>
+        <div class="schedule-card">
+          <div class="schedule-name"><%= s.name %></div>
+          <div class="schedule-meta">Devices: <%= s.devices.join(', ') %></div>
+          <div class="schedule-meta">Time: <%= s.time %> | Repeat: <%= s.repeat %></div>
+          <div class="schedule-actions">
+            <button class="btn"><i class="fas fa-play"></i> Run</button>
+            <button class="btn"><i class="fas fa-edit"></i> Edit</button>
+            <button class="btn"><i class="fas fa-trash"></i> Delete</button>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+  </div>
+</div>

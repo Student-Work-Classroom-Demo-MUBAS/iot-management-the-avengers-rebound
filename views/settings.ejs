@@ -1,0 +1,137 @@
+<%- include('partials/header') %>
+<%- include('partials/sidebar') %>
+
+<div class="main-content">
+  <div class="header">
+    <div class="page-title">
+      <h2>Settings</h2>
+      <p>Configure account, devices, alerts, and preferences</p>
+    </div>
+  </div>
+
+  <div class="settings-grid">
+    <div class="settings-card">
+      <div class="settings-header">
+        <div class="settings-title">Profile</div>
+      </div>
+      <div class="settings-body">
+        <div class="user-details">
+          <% if (data.user && data.user.image) { %>
+            <img src="<%= data.user.image %>" alt="User">
+          <% } else { %>
+            <img src="/public/images/png9.jpg" alt="User">
+          <% } %>
+          <div class="user-name"><%= data.user ? data.user.name : 'Chikondi Chambamba' %></div>
+          <div class="user-role"><%= data.user ? data.user.role : 'N/A' %></div>
+        </div>
+        <form>
+          <label>Name</label>
+          <input type="text" value="<%= data.user ? data.user.name : '' %>">
+          <label>Email</label>
+          <input type="email" value="<%= data.user ? data.user.email : '' %>">
+          <label>Timezone</label>
+          <select>
+            <% (data.settings.timezones || []).forEach(function(tz){ %>
+              <option <%= data.user && data.user.timezone === tz ? 'selected' : '' %>><%= tz %></option>
+            <% }) %>
+          </select>
+          <button class="btn"><i class="fas fa-save"></i> Save</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="settings-card">
+      <div class="settings-header">
+        <div class="settings-title">Devices</div>
+      </div>
+      <div class="settings-body">
+        <table class="device-table">
+          <thead>
+            <tr>
+              <th>Device</th>
+              <th>Location</th>
+              <th>Category</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% (data.settings.devices || []).forEach(function(d){ %>
+              <tr>
+                <td class="device-info">
+                  <div class="device-icon"><i class="<%= d.icon %>"></i></div>
+                  <div>
+                    <div class="device-name"><%= d.name %></div>
+                    <div class="device-location"><%= d.model %></div>
+                  </div>
+                </td>
+                <td><%= d.location %></td>
+                <td><%= d.category %></td>
+                <td><span class="status status-<%= d.status.toLowerCase() %>"><%= d.status %></span></td>
+                <td>
+                  <button class="action-btn edit-btn"><i class="fas fa-edit"></i></button>
+                  <button class="action-btn delete-btn"><i class="fas fa-trash"></i></button>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+        <button class="btn"><i class="fas fa-plus"></i> Add device</button>
+      </div>
+    </div>
+
+    <div class="settings-card">
+      <div class="settings-header">
+        <div class="settings-title">Notifications</div>
+      </div>
+      <div class="settings-body">
+        <form>
+          <label>
+            <input type="checkbox" <%= data.settings.notifications.energyAlerts ? 'checked' : '' %> />
+            Energy usage alerts
+          </label>
+          <label>
+            <input type="checkbox" <%= data.settings.notifications.deviceOffline ? 'checked' : '' %> />
+            Device offline alerts
+          </label>
+          <label>
+            <input type="checkbox" <%= data.settings.notifications.hvac ? 'checked' : '' %> />
+            HVAC notifications
+          </label>
+          <button class="btn"><i class="fas fa-save"></i> Save</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="settings-card">
+      <div class="settings-header">
+        <div class="settings-title">Preferences</div>
+      </div>
+      <div class="settings-body">
+        <form>
+          <label>Units</label>
+          <select>
+            <option <%= data.settings.preferences.units === 'metric' ? 'selected' : '' %> value="metric">Metric</option>
+            <option <%= data.settings.preferences.units === 'imperial' ? 'selected' : '' %> value="imperial">Imperial</option>
+          </select>
+
+          <label>Theme</label>
+          <select>
+            <option <%= data.settings.preferences.theme === 'light' ? 'selected' : '' %> value="light">Light</option>
+            <option <%= data.settings.preferences.theme === 'dark' ? 'selected' : '' %> value="dark">Dark</option>
+            <option <%= data.settings.preferences.theme === 'system' ? 'selected' : '' %> value="system">System</option>
+          </select>
+
+          <label>Data refresh interval</label>
+          <select>
+            <% [ '15s', '30s', '1m', '5m' ].forEach(function(i){ %>
+              <option <%= data.settings.preferences.refreshInterval === i ? 'selected' : '' %>><%= i %></option>
+            <% }) %>
+          </select>
+
+          <button class="btn"><i class="fas fa-save"></i> Save</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

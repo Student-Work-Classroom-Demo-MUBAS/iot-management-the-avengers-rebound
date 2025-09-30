@@ -1,0 +1,89 @@
+<%- include('partials/header') %>
+<%- include('partials/sidebar') %>
+
+<div class="main-content">
+  <div class="header">
+    <div class="page-title">
+      <h2>Analytics</h2>
+      <p>Insights, forecasts, and optimization suggestions</p>
+    </div>
+    <div class="actions">
+      <button class="btn"><i class="fas fa-brain"></i> Recompute</button>
+      <button class="btn"><i class="fas fa-download"></i> Export report</button>
+    </div>
+  </div>
+
+  <div class="dashboard-cards">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Monthly total</div>
+        <div class="card-icon"><i class="fas fa-calendar"></i></div>
+      </div>
+      <div class="card-value"><%= data.analytics.monthly.total %></div>
+      <div class="card-footer">
+        <span>Cost: <%= data.analytics.monthly.cost %></span>
+        <span class="trend <%= data.analytics.monthly.trend %>"><i class="fas fa-arrow-<%= data.analytics.monthly.trend %>"></i> <%= data.analytics.monthly.trendValue %></span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Forecast (next 7 days)</div>
+        <div class="card-icon"><i class="fas fa-chart-area"></i></div>
+      </div>
+      <div class="card-value"><%= data.analytics.forecast.total %></div>
+      <div class="card-footer"><span>Confidence: <%= data.analytics.forecast.confidence %></span></div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Optimization potential</div>
+        <div class="card-icon"><i class="fas fa-seedling"></i></div>
+      </div>
+      <div class="card-value"><%= data.analytics.optimization.potential %></div>
+      <div class="card-footer"><span>Top saver: <%= data.analytics.optimization.topSaver %></span></div>
+    </div>
+  </div>
+
+  <div class="charts">
+    <div class="chart-container">
+      <div class="chart-header">
+        <div class="chart-title">Daily consumption vs. baseline</div>
+        <div class="chart-actions">
+          <button class="chart-btn active">30d</button>
+          <button class="chart-btn">90d</button>
+        </div>
+      </div>
+      <canvas id="dailyVsBaselineChart" height="340"></canvas>
+    </div>
+
+    <div class="chart-container">
+      <div class="chart-header">
+        <div class="chart-title">Category contribution</div>
+      </div>
+      <canvas id="categoryContributionChart" height="340"></canvas>
+    </div>
+  </div>
+
+  <div class="devices-container">
+    <div class="devices-header">
+      <div class="devices-title">Recommendations</div>
+    </div>
+    <ul class="recommendation-list">
+      <% data.analytics.recommendations.forEach(function(rec){ %>
+        <li class="recommendation-item">
+          <div class="rec-icon"><i class="<%= rec.icon %>"></i></div>
+          <div class="rec-content">
+            <div class="rec-title"><%= rec.title %></div>
+            <div class="rec-desc"><%= rec.description %></div>
+            <div class="rec-impact">Estimated impact: <%= rec.impact %></div>
+          </div>
+          <div class="rec-actions">
+            <button class="btn"><i class="fas fa-check"></i> Apply</button>
+            <button class="btn"><i class="fas fa-bookmark"></i> Save</button>
+          </div>
+        </li>
+      <% }) %>
+    </ul>
+  </div>
+</div>
