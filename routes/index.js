@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { Op } = require('sequelize'); // <-- Add this line
+const { Op } = require('sequelize'); // <-- Op is imported here, so we use it directly
 
 // Constants for sensor types to avoid magic strings
 const SENSOR_TYPES = {
@@ -34,7 +34,6 @@ async function getCommonData(req) {
 } 
 
 // Dashboard homepage ("/")
-// Dashboard homepage ("/")
 router.get('/', async (req, res) => {
   const models = req.app.get('models');
   try {
@@ -48,38 +47,44 @@ router.get('/', async (req, res) => {
       lightData,
       energyData
     ] = await Promise.all([
-      getLatestSensorData(models, 'current'),
-      getLatestSensorData(models, 'temperature'),
-      getLatestSensorData(models, 'humidity'),
-      getLatestSensorData(models, 'light'),
-      getLatestSensorData(models, 'energy')
+      getLatestSensorData(models, SENSOR_TYPES.CURRENT),
+      getLatestSensorData(models, SENSOR_TYPES.TEMPERATURE),
+      getLatestSensorData(models, SENSOR_TYPES.HUMIDITY),
+      getLatestSensorData(models, SENSOR_TYPES.LIGHT),
+      getLatestSensorData(models, SENSOR_TYPES.ENERGY)
     ]);
+    
+    const current = currentData || { value: 0, unit: 'A' };
+    const temp = tempData || { value: 0, unit: '°C' };
+    const humidity = humidityData || { value: 0, unit: '%' };
+    const light = lightData || { value: 0, unit: 'lx' };
+    const energy = energyData || { value: 0, unit: 'kWh' };
 
     const data = {
       user,
+      devices, 
       cards: {
         currentUsage: {
-          value: `${currentUsage.value} ${currentUsage.unit}`,
+          value: `${current.value} ${current.unit}`, 
           trend: "up",
           trendValue: "12%"
         },
         temperature: {
-          value: `${temperature.value}${temperature.unit}`,
+          value: `${temp.value}${temp.unit}`, 
           humidity: `${humidity.value}${humidity.unit}`
         },
         lightLevel: {
-          value: `${lightLevel.value} ${lightLevel.unit}`,
+          value: `${light.value} ${light.unit}`,
           location: "Living Room",
           status: "Optimal"
         },
         energyToday: {
-          value: `${energyToday.value} ${energyToday.unit}`,
+          value: `${energy.value} ${energy.unit}`,
           cost: "$1.25",
           trend: "down",
           trendValue: "5%"
         }
       },
-      devices
     };
 
     res.render('dashboard', { data: data, currentPage: 'dashboard' });
@@ -92,7 +97,8 @@ router.get('/', async (req, res) => {
 // Energy Usage Page
 router.get('/energy', async (req, res) => {
   const models = req.app.get('models');
-  const { Sensor, SensorData, sequelize } = models;
+  // Removed 'sequelize' from destructuring, as we use the global 'Op' now.
+  const { Sensor, SensorData } = models; 
   try {
     console.log('Starting energy route...');
     
@@ -101,10 +107,11 @@ router.get('/energy', async (req, res) => {
     
     // Get energy data for charts
     const energyData24h = await SensorData.findAll({
-      include: [{ model: Sensor, as: 'sensor', where: { type: 'energy' } }],
+      include: [{ model: Sensor, as: 'sensor', where: { type: SENSOR_TYPES.ENERGY } }], 
       where: {
         timestamp: {
-          [sequelize.Op.gte]: new Date(new Date() - 24 * 60 * 60 * 1000)
+          // FIX: Changed from [sequelize.Op.gte] to [Op.gte]
+          [Op.gte]: new Date(new Date() - 24 * 60 * 60 * 1000) 
         }
       },
       order: [['timestamp', 'ASC']]
@@ -115,7 +122,8 @@ router.get('/energy', async (req, res) => {
     const data = {
       user: user,
       energyData: energyData24h,
-      timeRange: '24h'
+      timeRange: '24h',
+      devices 
     };
 
     console.log('Rendering energy page...');
@@ -135,25 +143,28 @@ router.get('/energy', async (req, res) => {
 // Temperature Page
 router.get('/temperature', async (req, res) => {
   const models = req.app.get('models');
-  const { Sensor, SensorData, sequelize } = models;
+  // Removed 'sequelize' from destructuring, as we use the global 'Op' now.
+  const { Sensor, SensorData } = models; 
   try {
     const { user, devices } = await getCommonData(req);
     
     const [tempData, humidityData] = await Promise.all([
       SensorData.findAll({
-        include: [{ model: Sensor, as: 'sensor', where: { type: 'temperature' } }],
+        include: [{ model: Sensor, as: 'sensor', where: { type: SENSOR_TYPES.TEMPERATURE } }], 
         where: {
           timestamp: {
-            [sequelize.Op.gte]: new Date(new Date() - 24 * 60 * 60 * 1000)
+            // FIX: Changed from [sequelize.Op.gte] to [Op.gte]
+            [Op.gte]: new Date(new Date() - 24 * 60 * 60 * 1000)
           }
         },
         order: [['timestamp', 'ASC']]
       }),
       SensorData.findAll({
-        include: [{ model: Sensor, as: 'sensor', where: { type: 'humidity' } }],
+        include: [{ model: Sensor, as: 'sensor', where: { type: SENSOR_TYPES.HUMIDITY } }], 
         where: {
           timestamp: {
-            [sequelize.Op.gte]: new Date(new Date() - 24 * 60 * 60 * 1000)
+            // FIX: Changed from [sequelize.Op.gte] to [Op.gte]
+            [Op.gte]: new Date(new Date() - 24 * 60 * 60 * 1000)
           }
         },
         order: [['timestamp', 'ASC']]
@@ -163,7 +174,8 @@ router.get('/temperature', async (req, res) => {
     const data = {
       user: user,
       temperatureData: tempData,
-      humidityData: humidityData
+      humidityData: humidityData,
+      devices 
     };
 
     res.render('temperature', { data: data, currentPage: 'temperature' });
@@ -184,12 +196,13 @@ router.get('/lighting', async (req, res) => {
       device.type === 'light' || device.name.toLowerCase().includes('light')
     );
 
-    const lightData = await getLatestSensorData(models, 'light');
+    const lightData = await getLatestSensorData(models, SENSOR_TYPES.LIGHT); 
 
     const data = {
       user: user,
       lightDevices: lightDevices,
-      currentLightLevel: lightData
+      currentLightLevel: lightData,
+      devices 
     };
 
     res.render('lighting', { data: data, currentPage: 'lighting' });
@@ -212,7 +225,8 @@ router.get('/appliances', async (req, res) => {
     const data = {
       user: user,
       appliances: appliances,
-      categories: [...new Set(appliances.map(app => app.category))].filter(Boolean)
+      categories: [...new Set(appliances.map(app => app.category))].filter(Boolean),
+      devices 
     };
 
     res.render('appliances', { data: data, currentPage: 'appliances' });
@@ -238,7 +252,8 @@ router.get('/settings', async (req, res) => {
     const data = {
       user: safeUser,
       totalDevices: devices.length,
-      connectedDevices: devices.filter(d => d.status === 'Online').length
+      connectedDevices: devices.filter(d => d.status === 'Online').length,
+      devices 
     };
 
     res.render('settings', { data: data, currentPage: 'settings' });
@@ -249,4 +264,3 @@ router.get('/settings', async (req, res) => {
 });
 
 module.exports = router;
-
