@@ -1,34 +1,5 @@
 const express = require('express');
 const router = express.Router();
-<<<<<<< Updated upstream
-const { User, Device, Sensor, SensorData } = require('../models');
-
-// Dashboard homepage
-router.get('/', async (req, res) => {
-  try {
-    const user = await User.findOne();
-    const devices = await Device.findAll({ order: [['name', 'ASC']] });
-    const currentData = await SensorData.findOne({
-      include: [{ model: Sensor, as: 'sensor', where: { type: 'current' } }],
-      order: [['timestamp', 'DESC']]
-    });
-    const tempData = await SensorData.findOne({
-      include: [{ model: Sensor, as: 'sensor', where: { type: 'temperature' } }],
-      order: [['timestamp', 'DESC']]
-    });
-    const humidityData = await SensorData.findOne({
-      include: [{ model: Sensor, as: 'sensor', where: { type: 'humidity' } }],
-      order: [['timestamp', 'DESC']]
-    });
-    const lightData = await SensorData.findOne({
-      include: [{ model: Sensor, as: 'sensor', where: { type: 'light' } }],
-      order: [['timestamp', 'DESC']]
-    });
-    const energyData = await SensorData.findOne({
-      include: [{ model: Sensor, as: 'sensor', where: { type: 'energy' } }],
-      order: [['timestamp', 'DESC']]
-    });
-=======
 const { Op } = require('sequelize'); // <-- Add this line
 
 // Constants for sensor types to avoid magic strings
@@ -82,7 +53,6 @@ router.get('/', async (req, res) => {
       getLatestSensorData(models, 'light'),
       getLatestSensorData(models, 'energy')
     ]);
->>>>>>> Stashed changes
 
     const data = {
       user: user,
@@ -111,16 +81,6 @@ router.get('/', async (req, res) => {
       devices: devices
     };
 
-<<<<<<< Updated upstream
-    res.render('dashboard', { data: data });
-  } catch (error) {
-    console.error(error);
-    res.status(500).send('Server error');
-  }
-});
-
-module.exports = router;
-=======
     res.render('dashboard', { data: data, currentPage: 'dashboard' });
   } catch (error) {
     console.error(error);
@@ -288,5 +248,4 @@ router.get('/settings', async (req, res) => {
 });
 
 module.exports = router;
->>>>>>> Stashed changes
 
