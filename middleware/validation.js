@@ -1,7 +1,7 @@
 const Joi = require('joi');
 
-// Custom validation for MySQL integer ID
-const mysqlId = (value, helpers) => {
+// Custom validation for MySQL numeric ID (assuming integer IDs)
+const objectId = (value, helpers) => {
   if (!Number.isInteger(Number(value)) || Number(value) <= 0) {
     return helpers.error('any.invalid');
   }

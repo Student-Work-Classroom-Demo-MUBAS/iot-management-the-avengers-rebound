@@ -34,6 +34,7 @@ async function getCommonData(req) {
 } 
 
 // Dashboard homepage ("/")
+// Dashboard homepage ("/")
 router.get('/', async (req, res) => {
   const models = req.app.get('models');
   try {
@@ -55,30 +56,30 @@ router.get('/', async (req, res) => {
     ]);
 
     const data = {
-      user: user,
+      user,
       cards: {
         currentUsage: {
-          value: `${currentData ? currentData.value.toFixed(1) : 0} ${currentData ? currentData.unit : 'A'}`,
+          value: `${currentUsage.value} ${currentUsage.unit}`,
           trend: "up",
           trendValue: "12%"
         },
         temperature: {
-          value: `${tempData ? tempData.value.toFixed(1) : 0}${tempData ? tempData.unit : '°C'}`,
-          humidity: `${humidityData ? humidityData.value.toFixed(0) : 0}${humidityData ? humidityData.unit : '%'}`
+          value: `${temperature.value}${temperature.unit}`,
+          humidity: `${humidity.value}${humidity.unit}`
         },
         lightLevel: {
-          value: `${lightData ? lightData.value.toFixed(0) : 0} ${lightData ? lightData.unit : 'lux'}`,
+          value: `${lightLevel.value} ${lightLevel.unit}`,
           location: "Living Room",
           status: "Optimal"
         },
         energyToday: {
-          value: `${energyData ? energyData.value.toFixed(1) : 0} ${energyData ? energyData.unit : 'kWh'}`,
+          value: `${energyToday.value} ${energyToday.unit}`,
           cost: "$1.25",
           trend: "down",
           trendValue: "5%"
         }
       },
-      devices: devices
+      devices
     };
 
     res.render('dashboard', { data: data, currentPage: 'dashboard' });

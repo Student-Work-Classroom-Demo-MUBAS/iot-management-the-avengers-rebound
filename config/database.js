@@ -1,11 +1,10 @@
-
 const { Sequelize } = require('sequelize');
 require('dotenv').config();
 
 const sequelize = new Sequelize(
   process.env.DB_NAME || 'smart_home_energy',
   process.env.DB_USER || 'smart_home_app',
-  process.env.DB_PASSWORD || '123456',
+  process.env.DB_PASSWORD || 'root',
   {
     host: process.env.DB_HOST || 'localhost',
     port: process.env.DB_PORT || 3306,
@@ -19,4 +18,15 @@ const sequelize = new Sequelize(
   }
 );
 
-module.exports = { sequelize };
+async function testConnection() {
+  try {
+    await sequelize.authenticate();
+    console.log('Connected to MySQL database successfully');
+    return true;
+  } catch (error) {
+    console.error('Failed to connect to database:', error);
+    return false;
+  }
+}
+
+module.exports = { sequelize, testConnection };
