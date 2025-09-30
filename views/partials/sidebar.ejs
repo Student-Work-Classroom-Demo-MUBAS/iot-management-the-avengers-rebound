@@ -1,37 +1,32 @@
-<!-- Sidebar -->
 <div class="sidebar">
     <div class="logo">
         <i class="fas fa-home"></i>
         <h1>Smart Home Energy</h1>
     </div>
     <div class="nav-links">
-        <div class="nav-item active">
+        <a href="/" class="nav-item <%= currentPage === 'dashboard' ? 'active' : '' %>">
             <i class="fas fa-th-large"></i>
             <span>Dashboard</span>
-        </div>
-        <div class="nav-item">
+        </a>
+        <a href="'/energy" class="nav-item <%= currentPage === 'energy' ? 'active' : '' %>">
             <i class="fas fa-bolt"></i>
             <span>Energy Usage</span>
-        </div>
-        <div class="nav-item">
+        </a>
+        <a href="/temperature" class="nav-item <%= currentPage === 'temperature' ? 'active' : '' %>">
             <i class="fas fa-temperature-high"></i>
             <span>Temperature</span>
-        </div>
-        <div class="nav-item">
+        </a>
+        <a href="/lighting" class="nav-item <%= currentPage === 'lighting' ? 'active' : '' %>">
             <i class="fas fa-sun"></i>
             <span>Lighting</span>
-        </div>
-        <div class="nav-item">
+        </a>
+        <a href="/appliances" class="nav-item <%= currentPage === 'appliances' ? 'active' : '' %>">
             <i class="fas fa-plug"></i>
             <span>Appliances</span>
-        </div>
-        <div class="nav-item">
-            <i class="fas fa-chart-pie"></i>
-            <span>Analytics</span>
-        </div>
-        <div class="nav-item">
+        </a>
+        <a href="/settings" class="nav-item <%= currentPage === 'settings' ? 'active' : '' %>">
             <i class="fas fa-cog"></i>
             <span>Settings</span>
-        </div>
+        </a>
     </div>
 </div>

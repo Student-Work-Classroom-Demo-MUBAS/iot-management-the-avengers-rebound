@@ -1,118 +1,97 @@
-<%- include('partials/header') %>
-<%- include('partials/sidebar') %>
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Appliances - Smart Home</title>
+  <style>
+    .appliance-card { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
+    .appliance-header { display: flex; justify-content: between; align-items: center; margin-bottom: 15px; }
+    .appliance-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; }
+    .appliance-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+    .appliance-item { background: #f8f9fa; padding: 15px; border-radius: 8px; }
+  </style>
+</head>
+<body>
+  <%- include('partials/header') %>
+  <%- include('partials/sidebar') %>
 
-<div class="main-content">
-  <div class="header">
-    <div class="page-title">
-      <h2>Appliances</h2>
-      <p>Manage connected appliances, schedules, and energy profiles</p>
-    </div>
-    <div class="actions">
-      <button class="btn"><i class="fas fa-plus"></i> Add Appliance</button>
-    </div>
-  </div>
-
-  <div class="dashboard-cards">
-    <div class="card">
-      <div class="card-header">
-        <div class="card-title">Total devices</div>
-        <div class="card-icon"><i class="fas fa-plug"></i></div>
+  <div class="main-content">
+    <div class="header">
+      <div class="page-title">
+        <h2>Appliances</h2>
+        <p>Manage your smart appliances</p>
       </div>
-      <div class="card-value"><%= data.appliances.count %></div>
-      <div class="card-footer">
-        <span>Online: <%= data.appliances.online %></span>
-        <span>Offline: <%= data.appliances.offline %></span>
-      </div>
+      <button class="btn btn-primary">
+        <i class="fas fa-plus"></i> Add Appliance
+      </button>
     </div>
 
-    <div class="card">
-      <div class="card-header">
-        <div class="card-title">Energy today</div>
-        <div class="card-icon"><i class="fas fa-bolt"></i></div>
+    <!-- Appliance Statistics -->
+    <div class="appliance-card">
+      <div class="appliance-header">
+        <h3>Overview</h3>
       </div>
-      <div class="card-value"><%= data.appliances.energyToday %></div>
-      <div class="card-footer"><span>Cost: <%= data.appliances.costToday %></span></div>
-    </div>
-
-    <div class="card">
-      <div class="card-header">
-        <div class="card-title">Alerts</div>
-        <div class="card-icon"><i class="fas fa-bell"></i></div>
-      </div>
-      <div class="card-value"><%= data.appliances.alertsCount %></div>
-      <div class="card-footer"><span>Last: <%= data.appliances.lastAlert %></span></div>
-    </div>
-  </div>
-
-  <div class="devices-container">
-    <div class="devices-header">
-      <div class="devices-title">Connected appliances</div>
-      <div class="filters">
-        <select>
-          <option>All Categories</option>
-          <% data.appliances.categories.forEach(function(c){ %>
-            <option><%= c %></option>
-          <% }) %>
-        </select>
+      <div class="appliance-stats">
+        <div class="stat">
+          <div class="stat-value"><%= data.appliances.length %></div>
+          <div class="stat-label">Total Appliances</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value"><%= data.appliances.filter(a => a.status === 'Online').length %></div>
+          <div class="stat-label">Active Now</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value" id="total-power">0W</div>
+          <div class="stat-label">Total Power</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value" id="energy-savings">15%</div>
+          <div class="stat-label">Energy Savings</div>
+        </div>
       </div>
     </div>
-    <table class="device-table">
-      <thead>
-        <tr>
-          <th>Device</th>
-          <th>Location</th>
-          <th>Category</th>
-          <th>Power</th>
-          <th>Status</th>
-          <th>Schedule</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% data.appliances.devices.forEach(function(device){ %>
-          <tr>
-            <td>
-              <div class="device-info">
-                <div class="device-icon"><i class="<%= device.icon %>"></i></div>
-                <div>
-                  <div class="device-name"><%= device.name %></div>
-                  <div class="device-location"><%= device.model %></div>
-                </div>
-              </div>
-            </td>
-            <td><%= device.location %></td>
-            <td><%= device.category %></td>
-            <td><%= device.power %></td>
-            <td><span class="status status-<%= device.status.toLowerCase() %>"><%= device.status %></span></td>
-            <td><%= device.schedule || '—' %></td>
-            <td>
-              <button class="action-btn edit-btn"><i class="fas fa-edit"></i></button>
-              <button class="action-btn power-btn"><i class="fas fa-toggle-on"></i></button>
-              <button class="action-btn delete-btn"><i class="fas fa-trash"></i></button>
-            </td>
-          </tr>
-        <% }) %>
-      </tbody>
-    </table>
-  </div>
 
-  <div class="devices-container">
-    <div class="devices-header">
-      <div class="devices-title">Schedules</div>
-    </div>
-    <div class="schedule-list">
-      <% data.appliances.schedules.forEach(function(s){ %>
-        <div class="schedule-card">
-          <div class="schedule-name"><%= s.name %></div>
-          <div class="schedule-meta">Devices: <%= s.devices.join(', ') %></div>
-          <div class="schedule-meta">Time: <%= s.time %> | Repeat: <%= s.repeat %></div>
-          <div class="schedule-actions">
-            <button class="btn"><i class="fas fa-play"></i> Run</button>
-            <button class="btn"><i class="fas fa-edit"></i> Edit</button>
-            <button class="btn"><i class="fas fa-trash"></i> Delete</button>
+    <!-- Appliances by Category -->
+    <% data.categories.forEach(function(category) { %>
+    <div class="appliance-card">
+      <div class="appliance-header">
+        <h3><%= category %></h3>
+      </div>
+      <div class="appliance-grid">
+        <% data.appliances.filter(app => app.category === category).forEach(function(appliance) { %>
+        <div class="appliance-item">
+          <div class="appliance-info">
+            <div class="appliance-icon">
+              <i class="<%= appliance.icon %>"></i>
+            </div>
+            <div>
+              <div class="appliance-name"><%= appliance.name %></div>
+              <div class="appliance-location"><%= appliance.location %></div>
+            </div>
+          </div>
+          <div class="appliance-details">
+            <div>Power: <%= appliance.power %></div>
+            <div class="status status-<%= appliance.status.toLowerCase() %>">
+              <%= appliance.status %>
+            </div>
+          </div>
+          <div class="appliance-controls">
+            <button class="action-btn power-btn" data-appliance-id="<%= appliance._id %>">
+              <i class="fas fa-power-off"></i>
+            </button>
+            <button class="action-btn edit-btn">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button class="action-btn schedule-btn">
+              <i class="fas fa-clock"></i>
+            </button>
           </div>
         </div>
-      <% }) %>
+        <% }); %>
+      </div>
     </div>
+    <% }); %>
   </div>
-</div>
+
+  <%- include('partials/footer') %>
+</body>
+</html>

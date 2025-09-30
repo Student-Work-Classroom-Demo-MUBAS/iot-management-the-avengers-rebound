@@ -1,137 +1,137 @@
-<%- include('partials/header') %>
-<%- include('partials/sidebar') %>
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Settings - Smart Home</title>
+  <style>
+    .settings-grid { display: grid; grid-template-columns: 250px 1fr; gap: 30px; }
+    .settings-nav { background: white; border-radius: 10px; padding: 20px; }
+    .settings-content { background: white; border-radius: 10px; padding: 30px; }
+    .nav-item { padding: 15px; cursor: pointer; border-radius: 8px; margin-bottom: 5px; }
+    .nav-item.active { background: #007bff; color: white; }
+    .form-group { margin-bottom: 20px; }
+    .form-label { display: block; margin-bottom: 5px; font-weight: bold; }
+    .form-control { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
+  </style>
+</head>
+<body>
+  <%- include('partials/header') %>
+  <%- include('partials/sidebar') %>
 
-<div class="main-content">
-  <div class="header">
-    <div class="page-title">
-      <h2>Settings</h2>
-      <p>Configure account, devices, alerts, and preferences</p>
-    </div>
-  </div>
-
-  <div class="settings-grid">
-    <div class="settings-card">
-      <div class="settings-header">
-        <div class="settings-title">Profile</div>
+  <div class="main-content">
+    <div class="header">
+      <div class="page-title">
+        <h2>Settings</h2>
+        <p>Manage your smart home system</p>
       </div>
-      <div class="settings-body">
-        <div class="user-details">
-          <% if (data.user && data.user.image) { %>
-            <img src="<%= data.user.image %>" alt="User">
-          <% } else { %>
-            <img src="/public/images/png9.jpg" alt="User">
-          <% } %>
-          <div class="user-name"><%= data.user ? data.user.name : 'Chikondi Chambamba' %></div>
-          <div class="user-role"><%= data.user ? data.user.role : 'N/A' %></div>
+    </div>
+
+    <div class="settings-grid">
+      <!-- Settings Navigation -->
+      <div class="settings-nav">
+        <div class="nav-item active" data-tab="profile">Profile Settings</div>
+        <div class="nav-item" data-tab="devices">Device Management</div>
+        <div class="nav-item" data-tab="energy">Energy Settings</div>
+        <div class="nav-item" data-tab="notifications">Notifications</div>
+        <div class="nav-item" data-tab="security">Security</div>
+        <div class="nav-item" data-tab="system">System</div>
+      </div>
+
+      <!-- Settings Content -->
+      <div class="settings-content">
+        <!-- Profile Settings -->
+        <div class="settings-tab active" id="profile-tab">
+          <h3>Profile Settings</h3>
+          <div class="form-group">
+            <label class="form-label">Name</label>
+            <input type="text" class="form-control" value="<%= data.user ? data.user.name : 'Guest User' %>">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <input type="email" class="form-control" value="user@example.com">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Phone</label>
+            <input type="tel" class="form-control" value="+1 (555) 123-4567">
+          </div>
+          <button class="btn btn-primary">Save Changes</button>
         </div>
-        <form>
-          <label>Name</label>
-          <input type="text" value="<%= data.user ? data.user.name : '' %>">
-          <label>Email</label>
-          <input type="email" value="<%= data.user ? data.user.email : '' %>">
-          <label>Timezone</label>
-          <select>
-            <% (data.settings.timezones || []).forEach(function(tz){ %>
-              <option <%= data.user && data.user.timezone === tz ? 'selected' : '' %>><%= tz %></option>
-            <% }) %>
-          </select>
-          <button class="btn"><i class="fas fa-save"></i> Save</button>
-        </form>
-      </div>
-    </div>
 
-    <div class="settings-card">
-      <div class="settings-header">
-        <div class="settings-title">Devices</div>
-      </div>
-      <div class="settings-body">
-        <table class="device-table">
-          <thead>
-            <tr>
-              <th>Device</th>
-              <th>Location</th>
-              <th>Category</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <% (data.settings.devices || []).forEach(function(d){ %>
-              <tr>
-                <td class="device-info">
-                  <div class="device-icon"><i class="<%= d.icon %>"></i></div>
-                  <div>
-                    <div class="device-name"><%= d.name %></div>
-                    <div class="device-location"><%= d.model %></div>
-                  </div>
-                </td>
-                <td><%= d.location %></td>
-                <td><%= d.category %></td>
-                <td><span class="status status-<%= d.status.toLowerCase() %>"><%= d.status %></span></td>
-                <td>
-                  <button class="action-btn edit-btn"><i class="fas fa-edit"></i></button>
-                  <button class="action-btn delete-btn"><i class="fas fa-trash"></i></button>
-                </td>
-              </tr>
-            <% }) %>
-          </tbody>
-        </table>
-        <button class="btn"><i class="fas fa-plus"></i> Add device</button>
-      </div>
-    </div>
+        <!-- Device Management -->
+        <div class="settings-tab" id="devices-tab">
+          <h3>Device Management</h3>
+          <div class="device-stats">
+            <p>Total Devices: <strong><%= data.totalDevices || 0 %></strong></p>
+            <p>Connected: <strong><%= data.connectedDevices || 0 %></strong></p>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Auto-Discovery</label>
+            <div>
+              <label class="switch">
+                <input type="checkbox" checked>
+                <span class="slider"></span>
+              </label>
+              <span>Enable automatic device discovery</span>
+            </div>
+          </div>
+          <button class="btn btn-secondary">
+            <i class="fas fa-sync"></i> Scan for Devices
+          </button>
+        </div>
 
-    <div class="settings-card">
-      <div class="settings-header">
-        <div class="settings-title">Notifications</div>
-      </div>
-      <div class="settings-body">
-        <form>
-          <label>
-            <input type="checkbox" <%= data.settings.notifications.energyAlerts ? 'checked' : '' %> />
-            Energy usage alerts
-          </label>
-          <label>
-            <input type="checkbox" <%= data.settings.notifications.deviceOffline ? 'checked' : '' %> />
-            Device offline alerts
-          </label>
-          <label>
-            <input type="checkbox" <%= data.settings.notifications.hvac ? 'checked' : '' %> />
-            HVAC notifications
-          </label>
-          <button class="btn"><i class="fas fa-save"></i> Save</button>
-        </form>
-      </div>
-    </div>
+        <!-- Energy Settings -->
+        <div class="settings-tab" id="energy-tab">
+          <h3>Energy Settings</h3>
+          <div class="form-group">
+            <label class="form-label">Electricity Rate ($/kWh)</label>
+            <input type="number" class="form-control" value="0.15" step="0.01">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Peak Hours</label>
+            <select class="form-control">
+              <option>6:00 AM - 10:00 PM</option>
+              <option>7:00 AM - 11:00 PM</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Energy Saving Mode</label>
+            <div>
+              <label class="switch">
+                <input type="checkbox" checked>
+                <span class="slider"></span>
+              </label>
+              <span>Enable energy saving optimizations</span>
+            </div>
+          </div>
+        </div>
 
-    <div class="settings-card">
-      <div class="settings-header">
-        <div class="settings-title">Preferences</div>
-      </div>
-      <div class="settings-body">
-        <form>
-          <label>Units</label>
-          <select>
-            <option <%= data.settings.preferences.units === 'metric' ? 'selected' : '' %> value="metric">Metric</option>
-            <option <%= data.settings.preferences.units === 'imperial' ? 'selected' : '' %> value="imperial">Imperial</option>
-          </select>
-
-          <label>Theme</label>
-          <select>
-            <option <%= data.settings.preferences.theme === 'light' ? 'selected' : '' %> value="light">Light</option>
-            <option <%= data.settings.preferences.theme === 'dark' ? 'selected' : '' %> value="dark">Dark</option>
-            <option <%= data.settings.preferences.theme === 'system' ? 'selected' : '' %> value="system">System</option>
-          </select>
-
-          <label>Data refresh interval</label>
-          <select>
-            <% [ '15s', '30s', '1m', '5m' ].forEach(function(i){ %>
-              <option <%= data.settings.preferences.refreshInterval === i ? 'selected' : '' %>><%= i %></option>
-            <% }) %>
-          </select>
-
-          <button class="btn"><i class="fas fa-save"></i> Save</button>
-        </form>
+        <!-- Notifications -->
+        <div class="settings-tab" id="notifications-tab">
+          <h3>Notification Settings</h3>
+          <div class="form-group">
+            <label class="form-label">Email Notifications</label>
+            <div>
+              <label class="switch">
+                <input type="checkbox" checked>
+                <span class="slider"></span>
+              </label>
+              <span>Receive email alerts</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Push Notifications</label>
+            <div>
+              <label class="switch">
+                <input type="checkbox" checked>
+                <span class="slider"></span>
+              </label>
+              <span>Receive push notifications</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
-</div>
+
+  <%- include('partials/footer') %>
+</body>
+</html>

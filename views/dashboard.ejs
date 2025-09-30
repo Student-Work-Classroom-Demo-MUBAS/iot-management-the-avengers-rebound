@@ -12,6 +12,37 @@
   <%- include('partials/header') %>
   <%- include('partials/sidebar') %>
 
+<<<<<<< Updated upstream
+<!-- Main Content -->
+<div class="main-content">
+    <div class="header">
+        <div class="page-title">
+            <h2>Home Energy Dashboard</h2>
+            <p>Monitor and manage your home's energy consumption</p>
+        </div>
+        <div class="search-bar">
+            <i class="fas fa-search"></i>
+            <input type="text" placeholder="Search devices, rooms...">
+        </div>
+        <div class="user-info">
+            <div class="notifications">
+                <i class="fas fa-bell"></i>
+                <span class="notification-badge">3</span>
+            </div>
+            <div class="user-details">
+                <% if (data.user && data.user.image) { %>
+                    <img src="<%= data.user.image %>" alt="User">
+                <% } else { %>
+                    <img src="/public\images\png9.jpg" alt="User">
+                <% } %>
+                <div>
+                    <div class="user-name"><%= data.user ? data.user.name : 'Chikondi Chambamba' %></div>
+                    <div class="user-role"><%= data.user ? data.user.role : 'N/A' %></div>
+                </div>
+            </div>
+        </div>
+    </div>
+=======
   <!-- Main Content -->
   <div class="main-content">
       <div class="header">
@@ -29,14 +60,23 @@
                   <span class="notification-badge">3</span>
               </div>
               <div class="user-details">
-                  <img src="<%= data.user.image %>" alt="User">
-                  <div>
-                      <div class="user-name"><%= data.user.name %></div>
-                      <div class="user-role"><%= data.user.role %></div>
-                  </div>
+                  <% if (data.user) { %>
+                      <img src="<%= data.user.image %>" alt="User">
+                      <div>
+                          <div class="user-name"><%= data.user.name %></div>
+                          <div class="user-role"><%= data.user.role %></div>
+                      </div>
+                  <% } else { %>
+                      <img src="public\images\png8.png" alt="User">
+                      <div>
+                          <div class="user-name">Chikondi Chambamba</div>
+                          <div class="user-role">Home Owner</div>
+                      </div>
+                  <% } %>
               </div>
           </div>
       </div>
+>>>>>>> Stashed changes
 
       <!-- Dashboard Cards -->
       <div class="dashboard-cards">
@@ -168,5 +208,10 @@
         </table>
     </div>
 </div>
+<<<<<<< Updated upstream
+=======
 
 <%- include('partials/footer') %>
+</body>
+</html>
+>>>>>>> Stashed changes

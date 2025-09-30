@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const { Op } = require('sequelize'); // <-- Add this line
 
 // Constants for sensor types to avoid magic strings
 const SENSOR_TYPES = {
@@ -11,7 +12,8 @@ const SENSOR_TYPES = {
 };
 
 // Helper function to get latest sensor data by type
-async function getLatestSensorData(type) {
+async function getLatestSensorData(models, type) {
+  const { Sensor, SensorData } = models;
   return await SensorData.findOne({
     include: [{ 
       model: Sensor, 
@@ -22,51 +24,36 @@ async function getLatestSensorData(type) {
   });
 }
 
-// Format sensor value with proper units
-function formatSensorValue(sensorData, fallbackUnit = '') {
-  if (!sensorData) return { value: '0', unit: fallbackUnit };
-  
-  const value = sensorData.value;
-  const unit = sensorData.unit || fallbackUnit;
-  
-  // Determine decimal places based on sensor type
-  const decimalPlaces = [SENSOR_TYPES.CURRENT, SENSOR_TYPES.TEMPERATURE].includes(sensorData.sensor?.type) ? 1 : 0;
-  
-  return {
-    value: value.toFixed(decimalPlaces),
-    unit
-  };
-}
+// Common data fetching function
+async function getCommonData(req) {
+  const { User, Device } = req.app.get('models');
+  const user = await User.findOne();
+  const devices = await Device.findAll({ order: [['name', 'ASC']] });
+  return { user, devices };
+
+} 
 
 // Dashboard homepage ("/")
+// Dashboard homepage ("/")
 router.get('/', async (req, res) => {
-  const { User, Device, Sensor, SensorData, sequelize } = req.app.get('models');
+  const models = req.app.get('models');
   try {
-    // Execute all database queries in parallel for better performance
+    const { user, devices } = await getCommonData(req);
+    
+    // Get all sensor data
     const [
-      user, 
-      devices, 
-      currentData, 
-      tempData, 
-      humidityData, 
-      lightData, 
+      currentData,
+      tempData,
+      humidityData,
+      lightData,
       energyData
     ] = await Promise.all([
-      User.findOne(),
-      Device.findAll({ order: [['name', 'ASC']] }),
-      getLatestSensorData(SENSOR_TYPES.CURRENT),
-      getLatestSensorData(SENSOR_TYPES.TEMPERATURE),
-      getLatestSensorData(SENSOR_TYPES.HUMIDITY),
-      getLatestSensorData(SENSOR_TYPES.LIGHT),
-      getLatestSensorData(SENSOR_TYPES.ENERGY)
+      getLatestSensorData(models, 'current'),
+      getLatestSensorData(models, 'temperature'),
+      getLatestSensorData(models, 'humidity'),
+      getLatestSensorData(models, 'light'),
+      getLatestSensorData(models, 'energy')
     ]);
-
-    // Format sensor data
-    const currentUsage = formatSensorValue(currentData, 'A');
-    const temperature = formatSensorValue(tempData, '°C');
-    const humidity = formatSensorValue(humidityData, '%');
-    const lightLevel = formatSensorValue(lightData, 'lux');
-    const energyToday = formatSensorValue(energyData, 'kWh');
 
     const data = {
       user,
@@ -95,37 +82,171 @@ router.get('/', async (req, res) => {
       devices
     };
 
-    res.render('dashboard', { 
-      activePage: 'dashboard', 
-      data 
-    });
+    res.render('dashboard', { data: data, currentPage: 'dashboard' });
   } catch (error) {
-    console.error('Dashboard route error:', error);
-    res.status(500).render('error', { 
-      message: 'Unable to load dashboard data',
-      error: process.env.NODE_ENV === 'development' ? error : {}
+    console.error(error);
+    res.status(500).send('Server error');
+  }
+});
+
+// Energy Usage Page
+router.get('/energy', async (req, res) => {
+  const models = req.app.get('models');
+  const { Sensor, SensorData, sequelize } = models;
+  try {
+    console.log('Starting energy route...');
+    
+    const { user, devices } = await getCommonData(req);
+    console.log('User and devices fetched:', user ? 'yes' : 'no', devices.length);
+    
+    // Get energy data for charts
+    const energyData24h = await SensorData.findAll({
+      include: [{ model: Sensor, as: 'sensor', where: { type: 'energy' } }],
+      where: {
+        timestamp: {
+          [sequelize.Op.gte]: new Date(new Date() - 24 * 60 * 60 * 1000)
+        }
+      },
+      order: [['timestamp', 'ASC']]
+    });
+    
+    console.log('Energy data fetched:', energyData24h.length, 'records');
+
+    const data = {
+      user: user,
+      energyData: energyData24h,
+      timeRange: '24h'
+    };
+
+    console.log('Rendering energy page...');
+    res.render('energy', { data: data, currentPage: 'energy' });
+    
+  } catch (error) {
+    console.error('ERROR in energy route:');
+    console.error('Message:', error.message);
+    console.error('Stack:', error.stack);
+    res.status(500).json({ 
+      error: 'Something went wrong!',
+      details: error.message 
     });
   }
 });
 
-// Route configuration for static pages
-const routes = [
-  { path: 'energy_usage', page: 'energy_usage' },
-  { path: 'temperature', page: 'temperature' },
-  { path: 'lighting', page: 'lighting' },
-  { path: 'appliances', page: 'appliances' },
-  { path: 'analytics', page: 'analytics' },
-  { path: 'settings', page: 'settings' }
-];
+// Temperature Page
+router.get('/temperature', async (req, res) => {
+  const models = req.app.get('models');
+  const { Sensor, SensorData, sequelize } = models;
+  try {
+    const { user, devices } = await getCommonData(req);
+    
+    const [tempData, humidityData] = await Promise.all([
+      SensorData.findAll({
+        include: [{ model: Sensor, as: 'sensor', where: { type: 'temperature' } }],
+        where: {
+          timestamp: {
+            [sequelize.Op.gte]: new Date(new Date() - 24 * 60 * 60 * 1000)
+          }
+        },
+        order: [['timestamp', 'ASC']]
+      }),
+      SensorData.findAll({
+        include: [{ model: Sensor, as: 'sensor', where: { type: 'humidity' } }],
+        where: {
+          timestamp: {
+            [sequelize.Op.gte]: new Date(new Date() - 24 * 60 * 60 * 1000)
+          }
+        },
+        order: [['timestamp', 'ASC']]
+      })
+    ]);
 
-// Register routes dynamically
-routes.forEach(route => {
-  router.get(`/${route.path}`, (req, res) => {
-    res.render(route.page, { 
-      activePage: route.page, 
-      data: {} 
-    });
-  });
+    const data = {
+      user: user,
+      temperatureData: tempData,
+      humidityData: humidityData
+    };
+
+    res.render('temperature', { data: data, currentPage: 'temperature' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Server error');
+  }
+});
+
+// Lighting Page
+router.get('/lighting', async (req, res) => {
+  const models = req.app.get('models');
+  const { Device, Sensor, SensorData } = models;
+  try {
+    const { user, devices } = await getCommonData(req);
+    
+    const lightDevices = devices.filter(device => 
+      device.type === 'light' || device.name.toLowerCase().includes('light')
+    );
+
+    const lightData = await getLatestSensorData(models, 'light');
+
+    const data = {
+      user: user,
+      lightDevices: lightDevices,
+      currentLightLevel: lightData
+    };
+
+    res.render('lighting', { data: data, currentPage: 'lighting' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Server error');
+  }
+});
+
+// Appliances Page
+router.get('/appliances', async (req, res) => {
+  try {
+    const { user, devices } = await getCommonData(req);
+    
+    // Categorize devices
+    const appliances = devices.filter(device => 
+      !['light', 'sensor'].includes(device.type)
+    );
+
+    const data = {
+      user: user,
+      appliances: appliances,
+      categories: [...new Set(appliances.map(app => app.category))].filter(Boolean)
+    };
+
+    res.render('appliances', { data: data, currentPage: 'appliances' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Server error');
+  }
+});
+
+
+// Settings Page
+router.get('/settings', async (req, res) => {
+  try {
+    const { user, devices } = await getCommonData(req);
+    
+    // Provide fallback if user is null
+    const safeUser = user || { 
+      name: 'Guest User', 
+      role: 'Administrator', 
+      image: '/images/default-avatar.png' 
+    };
+
+    const data = {
+      user: safeUser,
+      totalDevices: devices.length,
+      connectedDevices: devices.filter(d => d.status === 'Online').length
+    };
+
+    res.render('settings', { data: data, currentPage: 'settings' });
+  } catch (error) {
+    console.error('Settings route error:', error);
+    res.status(500).send('Server error');
+  }
 });
 
 module.exports = router;
+
