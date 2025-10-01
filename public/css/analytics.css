@@ -1,0 +1,24 @@
+/* Analytics-specific styles */
+.analytics-page {
+    /* Additional analytics-specific styles */
+}
+
+/* Chart container responsiveness */
+.chart-container {
+    position: relative;
+    height: 300px;
+    width: 100%;
+}
+
+/* Print styles for reports */
+@media print {
+    .header-actions,
+    .sidebar,
+    .btn {
+        display: none !important;
+    }
+    
+    .main-content {
+        margin-left: 0 !important;
+    }
+}
