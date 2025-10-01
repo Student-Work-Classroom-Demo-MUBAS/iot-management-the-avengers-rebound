@@ -1,97 +1,1114 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Appliances - Smart Home</title>
-  <style>
-    .appliance-card { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
-    .appliance-header { display: flex; justify-content: between; align-items: center; margin-bottom: 15px; }
-    .appliance-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; }
-    .appliance-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
-    .appliance-item { background: #f8f9fa; padding: 15px; border-radius: 8px; }
-  </style>
-</head>
-<body>
-  <%- include('partials/header') %>
-  <%- include('partials/sidebar') %>
+<!-- views/appliances.ejs -->
+<%- include('partials/header', {
+    title: 'Appliances Management - Smart Home',
+    description: 'Monitor, control, and optimize your smart home appliances with real-time energy tracking and automation',
+    bodyClass: 'appliances-page',
+    additionalStyles: ['/css/appliances.css'],
+    pageTitle: 'Appliances Management',
+    pageSubtitle: 'Smart control and energy optimization'
+}) %>
 
-  <div class="main-content">
-    <div class="header">
-      <div class="page-title">
-        <h2>Appliances</h2>
-        <p>Manage your smart appliances</p>
-      </div>
-      <button class="btn btn-primary">
-        <i class="fas fa-plus"></i> Add Appliance
-      </button>
+<%- include('partials/sidebar') %>
+
+<div class="main-content">
+    <!-- Header Section -->
+    <header class="header">
+        <div class="header-content">
+            <div class="page-title">
+                <h1>Appliances Management</h1>
+                <p>Monitor, control, and optimize your smart home appliances</p>
+            </div>
+            <div class="header-actions">
+                <div class="view-controls">
+                    <button class="view-btn active" data-view="grid" title="Grid View">
+                        <i class="fas fa-th"></i>
+                    </button>
+                    <button class="view-btn" data-view="list" title="List View">
+                        <i class="fas fa-list"></i>
+                    </button>
+                    <button class="view-btn" data-view="categories" title="Category View">
+                        <i class="fas fa-folder"></i>
+                    </button>
+                </div>
+                <div class="filter-controls">
+                    <select id="categoryFilter" class="filter-select">
+                        <option value="all">All Categories</option>
+                        <% data.categories.forEach(function(category) { %>
+                            <option value="<%= category %>"><%= category %></option>
+                        <% }); %>
+                    </select>
+                    <select id="statusFilter" class="filter-select">
+                        <option value="all">All Status</option>
+                        <option value="online">Online</option>
+                        <option value="offline">Offline</option>
+                        <option value="active">Active</option>
+                        <option value="idle">Idle</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary" id="addApplianceBtn">
+                    <i class="fas fa-plus"></i>
+                    <span>Add Appliance</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Quick Actions Bar -->
+    <div class="quick-actions-bar">
+        <div class="action-group">
+            <button class="action-btn bulk-action" data-action="turn-on-all">
+                <i class="fas fa-power-off"></i>
+                <span>Turn All On</span>
+            </button>
+            <button class="action-btn bulk-action" data-action="turn-off-all">
+                <i class="fas fa-power-off"></i>
+                <span>Turn All Off</span>
+            </button>
+            <button class="action-btn bulk-action" data-action="energy-saver">
+                <i class="fas fa-leaf"></i>
+                <span>Energy Saver Mode</span>
+            </button>
+        </div>
+        <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" id="applianceSearch" placeholder="Search appliances..." aria-label="Search appliances">
+        </div>
     </div>
 
-    <!-- Appliance Statistics -->
-    <div class="appliance-card">
-      <div class="appliance-header">
-        <h3>Overview</h3>
-      </div>
-      <div class="appliance-stats">
-        <div class="stat">
-          <div class="stat-value"><%= data.appliances.length %></div>
-          <div class="stat-label">Total Appliances</div>
+    <!-- Statistics Overview -->
+    <div class="stats-overview">
+        <div class="stat-card">
+            <div class="stat-icon total">
+                <i class="fas fa-plug"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value"><%= data.appliances.length %></div>
+                <div class="stat-label">Total Appliances</div>
+            </div>
+            <div class="stat-trend positive">
+                <i class="fas fa-arrow-up"></i>
+                <span>+2 this month</span>
+            </div>
         </div>
-        <div class="stat">
-          <div class="stat-value"><%= data.appliances.filter(a => a.status === 'Online').length %></div>
-          <div class="stat-label">Active Now</div>
+
+        <div class="stat-card">
+            <div class="stat-icon active">
+                <i class="fas fa-bolt"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value" id="active-appliances">
+                    <%= data.appliances.filter(a => a.status === 'Online' || a.status === 'Active').length %>
+                </div>
+                <div class="stat-label">Active Now</div>
+            </div>
+            <div class="stat-badge online">
+                <i class="fas fa-circle"></i>
+                <span>Live</span>
+            </div>
         </div>
-        <div class="stat">
-          <div class="stat-value" id="total-power">0W</div>
-          <div class="stat-label">Total Power</div>
+
+        <div class="stat-card">
+            <div class="stat-icon power">
+                <i class="fas fa-charging-station"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value" id="total-power-consumption">0 W</div>
+                <div class="stat-label">Current Power</div>
+            </div>
+            <div class="stat-change negative">
+                <i class="fas fa-arrow-down"></i>
+                <span id="power-change">0%</span>
+            </div>
         </div>
-        <div class="stat">
-          <div class="stat-value" id="energy-savings">15%</div>
-          <div class="stat-label">Energy Savings</div>
+
+        <div class="stat-card">
+            <div class="stat-icon savings">
+                <i class="fas fa-piggy-bank"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value" id="energy-savings">15%</div>
+                <div class="stat-label">Energy Savings</div>
+            </div>
+            <div class="stat-progress">
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 15%;"></div>
+                </div>
+            </div>
         </div>
-      </div>
+
+        <div class="stat-card">
+            <div class="stat-icon cost">
+                <i class="fas fa-dollar-sign"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value" id="daily-cost">$2.45</div>
+                <div class="stat-label">Daily Cost</div>
+            </div>
+            <div class="stat-trend negative">
+                <i class="fas fa-arrow-up"></i>
+                <span>+$0.15 today</span>
+            </div>
+        </div>
     </div>
 
-    <!-- Appliances by Category -->
-    <% data.categories.forEach(function(category) { %>
-    <div class="appliance-card">
-      <div class="appliance-header">
-        <h3><%= category %></h3>
-      </div>
-      <div class="appliance-grid">
-        <% data.appliances.filter(app => app.category === category).forEach(function(appliance) { %>
-        <div class="appliance-item">
-          <div class="appliance-info">
-            <div class="appliance-icon">
-              <i class="<%= appliance.icon %>"></i>
+    <!-- Appliances Grid View -->
+    <div class="appliances-container view-active" id="grid-view">
+        <div class="section-header">
+            <h2>All Appliances</h2>
+            <div class="section-actions">
+                <span class="appliance-count">
+                    Showing <strong id="filtered-count"><%= data.appliances.length %></strong> of <strong><%= data.appliances.length %></strong> appliances
+                </span>
             </div>
-            <div>
-              <div class="appliance-name"><%= appliance.name %></div>
-              <div class="appliance-location"><%= appliance.location %></div>
-            </div>
-          </div>
-          <div class="appliance-details">
-            <div>Power: <%= appliance.power %></div>
-            <div class="status status-<%= appliance.status.toLowerCase() %>">
-              <%= appliance.status %>
-            </div>
-          </div>
-          <div class="appliance-controls">
-            <button class="action-btn power-btn" data-appliance-id="<%= appliance._id %>">
-              <i class="fas fa-power-off"></i>
-            </button>
-            <button class="action-btn edit-btn">
-              <i class="fas fa-edit"></i>
-            </button>
-            <button class="action-btn schedule-btn">
-              <i class="fas fa-clock"></i>
-            </button>
-          </div>
         </div>
+
+        <div class="appliances-grid" id="appliances-grid">
+            <% data.appliances.forEach(function(appliance) { %>
+                <div class="appliance-card" data-category="<%= appliance.category %>" data-status="<%= appliance.status.toLowerCase() %>">
+                    <div class="appliance-header">
+                        <div class="appliance-icon">
+                            <i class="<%= appliance.icon %>"></i>
+                            <div class="status-indicator <%= appliance.status.toLowerCase() %>"></div>
+                        </div>
+                        <div class="appliance-actions">
+                            <div class="dropdown">
+                                <button class="dropdown-btn" aria-label="Appliance options">
+                                    <i class="fas fa-ellipsis-v"></i>
+                                </button>
+                                <div class="dropdown-menu">
+                                    <button class="dropdown-item" data-action="edit" data-appliance-id="<%= appliance.id %>">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </button>
+                                    <button class="dropdown-item" data-action="schedule" data-appliance-id="<%= appliance.id %>">
+                                        <i class="fas fa-clock"></i> Schedule
+                                    </button>
+                                    <button class="dropdown-item" data-action="stats" data-appliance-id="<%= appliance.id %>">
+                                        <i class="fas fa-chart-bar"></i> Statistics
+                                    </button>
+                                    <div class="dropdown-divider"></div>
+                                    <button class="dropdown-item text-danger" data-action="remove" data-appliance-id="<%= appliance.id %>">
+                                        <i class="fas fa-trash"></i> Remove
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="appliance-content">
+                        <h3 class="appliance-name"><%= appliance.name %></h3>
+                        <p class="appliance-location">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <%= appliance.location %>
+                        </p>
+                        
+                        <div class="appliance-stats">
+                            <div class="stat">
+                                <span class="label">Power</span>
+                                <span class="value"><%= appliance.power %></span>
+                            </div>
+                            <div class="stat">
+                                <span class="label">Usage</span>
+                                <span class="value" id="usage-<%= appliance.id %>">--</span>
+                            </div>
+                            <div class="stat">
+                                <span class="label">Today</span>
+                                <span class="value" id="today-<%= appliance.id %>">--</span>
+                            </div>
+                        </div>
+
+                        <div class="appliance-meta">
+                            <span class="model"><%= appliance.model %></span>
+                            <span class="last-seen" id="last-seen-<%= appliance.id %>">--</span>
+                        </div>
+                    </div>
+
+                    <div class="appliance-footer">
+                        <div class="power-control">
+                            <label class="switch">
+                                <input type="checkbox" 
+                                       class="power-toggle" 
+                                       data-appliance-id="<%= appliance.id %>"
+                                       <%= appliance.status === 'Online' || appliance.status === 'Active' ? 'checked' : '' %>>
+                                <span class="slider"></span>
+                            </label>
+                            <span class="power-status">
+                                <%= appliance.status === 'Online' || appliance.status === 'Active' ? 'ON' : 'OFF' %>
+                            </span>
+                        </div>
+                        <div class="appliance-controls">
+                            <button class="control-btn" data-action="settings" data-appliance-id="<%= appliance.id %>" title="Settings">
+                                <i class="fas fa-cog"></i>
+                            </button>
+                            <button class="control-btn" data-action="energy" data-appliance-id="<%= appliance.id %>" title="Energy Details">
+                                <i class="fas fa-chart-line"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            <% }); %>
+        </div>
+
+        <!-- Empty State -->
+        <div class="empty-state" id="empty-state" style="display: none;">
+            <div class="empty-icon">
+                <i class="fas fa-plug"></i>
+            </div>
+            <h3>No appliances found</h3>
+            <p>Try adjusting your filters or add a new appliance to get started.</p>
+            <button class="btn btn-primary" id="add-first-appliance">
+                <i class="fas fa-plus"></i>
+                Add Your First Appliance
+            </button>
+        </div>
+    </div>
+
+    <!-- Categories View -->
+    <div class="categories-container view-hidden" id="categories-view">
+        <div class="section-header">
+            <h2>Appliances by Category</h2>
+        </div>
+
+        <% data.categories.forEach(function(category) { %>
+            <div class="category-section">
+                <div class="category-header">
+                    <h3 class="category-title">
+                        <i class="fas fa-<%= getCategoryIcon(category) %>"></i>
+                        <%= category %>
+                    </h3>
+                    <span class="category-count">
+                        <%= data.appliances.filter(app => app.category === category).length %> appliances
+                    </span>
+                </div>
+                
+                <div class="category-appliances">
+                    <% data.appliances.filter(app => app.category === category).forEach(function(appliance) { %>
+                        <div class="category-appliance-item">
+                            <div class="appliance-basic-info">
+                                <div class="appliance-icon">
+                                    <i class="<%= appliance.icon %>"></i>
+                                </div>
+                                <div class="appliance-details">
+                                    <h4><%= appliance.name %></h4>
+                                    <span class="appliance-location"><%= appliance.location %></span>
+                                </div>
+                            </div>
+                            <div class="appliance-status">
+                                <span class="status-badge <%= appliance.status.toLowerCase() %>">
+                                    <%= appliance.status %>
+                                </span>
+                            </div>
+                            <div class="appliance-power">
+                                <span class="power-value"><%= appliance.power %></span>
+                            </div>
+                            <div class="appliance-actions">
+                                <button class="btn btn-sm" data-action="control" data-appliance-id="<%= appliance.id %>">
+                                    Control
+                                </button>
+                            </div>
+                        </div>
+                    <% }); %>
+                </div>
+            </div>
         <% }); %>
-      </div>
     </div>
-    <% }); %>
-  </div>
 
-  <%- include('partials/footer') %>
-</body>
-</html>
+    <!-- List View -->
+    <div class="list-container view-hidden" id="list-view">
+        <div class="section-header">
+            <h2>Appliances List</h2>
+        </div>
+
+        <div class="appliances-table">
+            <div class="table-header">
+                <div class="col name">Appliance</div>
+                <div class="col category">Category</div>
+                <div class="col location">Location</div>
+                <div class="col power">Power</div>
+                <div class="col status">Status</div>
+                <div class="col usage">Usage Today</div>
+                <div class="col actions">Actions</div>
+            </div>
+
+            <div class="table-body">
+                <% data.appliances.forEach(function(appliance) { %>
+                    <div class="table-row" data-category="<%= appliance.category %>" data-status="<%= appliance.status.toLowerCase() %>">
+                        <div class="col name">
+                            <div class="appliance-info">
+                                <i class="<%= appliance.icon %>"></i>
+                                <span><%= appliance.name %></span>
+                            </div>
+                        </div>
+                        <div class="col category">
+                            <span class="category-tag"><%= appliance.category %></span>
+                        </div>
+                        <div class="col location">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <%= appliance.location %>
+                        </div>
+                        <div class="col power">
+                            <%= appliance.power %>
+                        </div>
+                        <div class="col status">
+                            <span class="status-indicator <%= appliance.status.toLowerCase() %>"></span>
+                            <%= appliance.status %>
+                        </div>
+                        <div class="col usage">
+                            <span id="list-usage-<%= appliance.id %>">--</span>
+                        </div>
+                        <div class="col actions">
+                            <div class="action-buttons">
+                                <button class="action-btn" data-action="toggle" data-appliance-id="<%= appliance.id %>" title="Toggle Power">
+                                    <i class="fas fa-power-off"></i>
+                                </button>
+                                <button class="action-btn" data-action="edit" data-appliance-id="<%= appliance.id %>" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="action-btn" data-action="more" data-appliance-id="<%= appliance.id %>" title="More Options">
+                                    <i class="fas fa-ellipsis-v"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                <% }); %>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bulk Actions Bar -->
+    <div class="bulk-actions-bar" id="bulk-actions" style="display: none;">
+        <div class="bulk-actions-content">
+            <span class="selected-count">
+                <span id="selected-appliances-count">0</span> appliances selected
+            </span>
+            <div class="bulk-actions-buttons">
+                <button class="btn btn-sm" data-bulk-action="turn-on">
+                    <i class="fas fa-power-off"></i>
+                    Turn On
+                </button>
+                <button class="btn btn-sm" data-bulk-action="turn-off">
+                    <i class="fas fa-power-off"></i>
+                    Turn Off
+                </button>
+                <button class="btn btn-sm" data-bulk-action="schedule">
+                    <i class="fas fa-clock"></i>
+                    Schedule
+                </button>
+                <button class="btn btn-sm btn-outline" id="clear-selection">
+                    Clear Selection
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include('partials/footer', {
+    additionalScripts: [
+        '/js/appliances.js'
+    ]
+}) %>
+
+<!-- Appliances-specific CSS -->
+<style>
+    .appliances-page {
+        --category-kitchen: #e74c3c;
+        --category-living: #3498db;
+        --category-bedroom: #9b59b6;
+        --category-bathroom: #1abc9c;
+        --category-office: #f39c12;
+        --category-outdoor: #27ae60;
+    }
+
+    /* Quick Actions Bar */
+    .quick-actions-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: white;
+        padding: 15px 20px;
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        margin-bottom: 20px;
+    }
+
+    .action-group {
+        display: flex;
+        gap: 10px;
+    }
+
+    .action-btn {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        background: var(--soft-white);
+        border: 1px solid var(--light-grey);
+        border-radius: var(--radius);
+        color: var(--navy);
+        cursor: pointer;
+        transition: var(--transition);
+        font-size: 0.9rem;
+    }
+
+    .action-btn:hover {
+        background: var(--light-grey);
+        transform: translateY(-1px);
+    }
+
+    .search-box {
+        position: relative;
+        width: 250px;
+    }
+
+    .search-box i {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #6c757d;
+    }
+
+    .search-box input {
+        width: 100%;
+        padding: 8px 12px 8px 35px;
+        border: 1px solid var(--light-grey);
+        border-radius: var(--radius);
+        font-size: 0.9rem;
+    }
+
+    /* Statistics Overview */
+    .stats-overview {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 30px;
+    }
+
+    .stat-card {
+        background: white;
+        padding: 20px;
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        transition: var(--transition);
+    }
+
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        color: white;
+    }
+
+    .stat-icon.total { background: var(--navy); }
+    .stat-icon.active { background: var(--olive-green); }
+    .stat-icon.power { background: #e74c3c; }
+    .stat-icon.savings { background: #27ae60; }
+    .stat-icon.cost { background: #f39c12; }
+
+    .stat-content {
+        flex: 1;
+    }
+
+    .stat-value {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--navy);
+        line-height: 1;
+    }
+
+    .stat-label {
+        font-size: 0.9rem;
+        color: #6c757d;
+        margin-top: 4px;
+    }
+
+    .stat-trend, .stat-badge, .stat-change {
+        font-size: 0.8rem;
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-weight: 600;
+    }
+
+    .stat-trend.positive, .stat-change.positive { background: rgba(39, 174, 96, 0.1); color: #27ae60; }
+    .stat-trend.negative, .stat-change.negative { background: rgba(231, 76, 60, 0.1); color: #e74c3c; }
+    .stat-badge.online { background: rgba(39, 174, 96, 0.1); color: #27ae60; }
+
+    .progress-bar {
+        width: 100%;
+        height: 4px;
+        background: #e9ecef;
+        border-radius: 2px;
+        overflow: hidden;
+        margin-top: 8px;
+    }
+
+    .progress-fill {
+        height: 100%;
+        background: var(--olive-green);
+        transition: width 0.3s ease;
+    }
+
+    /* Appliances Grid */
+    .appliances-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+    }
+
+    .appliance-card {
+        background: white;
+        border-radius: var(--radius);
+        padding: 20px;
+        box-shadow: var(--shadow);
+        transition: var(--transition);
+        border: 1px solid transparent;
+    }
+
+    .appliance-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        border-color: var(--olive-green);
+    }
+
+    .appliance-card.selected {
+        border-color: var(--olive-green);
+        background: rgba(138, 154, 91, 0.05);
+    }
+
+    .appliance-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 15px;
+    }
+
+    .appliance-icon {
+        position: relative;
+        width: 50px;
+        height: 50px;
+        background: var(--soft-white);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: var(--olive-green);
+    }
+
+    .status-indicator {
+        position: absolute;
+        top: -2px;
+        right: -2px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        border: 2px solid white;
+    }
+
+    .status-indicator.online, .status-indicator.active { background: #27ae60; }
+    .status-indicator.offline, .status-indicator.idle { background: #95a5a6; }
+    .status-indicator.error { background: #e74c3c; }
+    .status-indicator.warning { background: #f39c12; }
+
+    .appliance-name {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: var(--navy);
+        margin-bottom: 5px;
+    }
+
+    .appliance-location {
+        color: #6c757d;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .appliance-stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin: 15px 0;
+        padding: 15px;
+        background: var(--soft-white);
+        border-radius: var(--radius);
+    }
+
+    .stat {
+        text-align: center;
+    }
+
+    .stat .label {
+        display: block;
+        font-size: 0.8rem;
+        color: #6c757d;
+        margin-bottom: 4px;
+    }
+
+    .stat .value {
+        display: block;
+        font-weight: 600;
+        color: var(--navy);
+        font-size: 0.9rem;
+    }
+
+    .appliance-meta {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.8rem;
+        color: #6c757d;
+        margin-bottom: 15px;
+    }
+
+    .appliance-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 15px;
+        border-top: 1px solid var(--light-grey);
+    }
+
+    .power-control {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    /* Toggle Switch */
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 50px;
+        height: 24px;
+    }
+
+    .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: .4s;
+        border-radius: 24px;
+    }
+
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 16px;
+        width: 16px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        transition: .4s;
+        border-radius: 50%;
+    }
+
+    input:checked + .slider {
+        background-color: var(--olive-green);
+    }
+
+    input:checked + .slider:before {
+        transform: translateX(26px);
+    }
+
+    .power-status {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--navy);
+    }
+
+    .appliance-controls {
+        display: flex;
+        gap: 5px;
+    }
+
+    .control-btn {
+        width: 32px;
+        height: 32px;
+        border: 1px solid var(--light-grey);
+        background: white;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: var(--transition);
+        color: #6c757d;
+    }
+
+    .control-btn:hover {
+        background: var(--soft-white);
+        color: var(--navy);
+        transform: translateY(-1px);
+    }
+
+    /* Categories View */
+    .category-section {
+        background: white;
+        border-radius: var(--radius);
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: var(--shadow);
+    }
+
+    .category-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid var(--light-grey);
+    }
+
+    .category-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 1.3rem;
+        color: var(--navy);
+        margin: 0;
+    }
+
+    .category-count {
+        background: var(--soft-white);
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+
+    .category-appliances {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .category-appliance-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 15px;
+        background: var(--soft-white);
+        border-radius: var(--radius);
+        transition: var(--transition);
+    }
+
+    .category-appliance-item:hover {
+        background: var(--light-grey);
+    }
+
+    .appliance-basic-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex: 1;
+    }
+
+    .status-badge {
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    .status-badge.online, .status-badge.active {
+        background: rgba(39, 174, 96, 0.1);
+        color: #27ae60;
+    }
+
+    .status-badge.offline, .status-badge.idle {
+        background: rgba(149, 165, 166, 0.1);
+        color: #95a5a6;
+    }
+
+    /* List View */
+    .appliances-table {
+        background: white;
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+    }
+
+    .table-header {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr auto;
+        gap: 15px;
+        padding: 15px 20px;
+        background: var(--navy);
+        color: white;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .table-row {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr auto;
+        gap: 15px;
+        padding: 15px 20px;
+        border-bottom: 1px solid var(--light-grey);
+        transition: var(--transition);
+    }
+
+    .table-row:hover {
+        background: var(--soft-white);
+    }
+
+    .table-row:last-child {
+        border-bottom: none;
+    }
+
+    .appliance-info {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .category-tag {
+        background: var(--soft-white);
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        color: var(--navy);
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 5px;
+    }
+
+    /* Bulk Actions */
+    .bulk-actions-bar {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--navy);
+        color: white;
+        padding: 15px 20px;
+        border-radius: var(--radius);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        z-index: 1000;
+    }
+
+    .bulk-actions-content {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+    }
+
+    /* View Controls */
+    .view-controls {
+        display: flex;
+        background: var(--soft-white);
+        border-radius: 6px;
+        padding: 4px;
+    }
+
+    .view-btn {
+        padding: 8px 12px;
+        border: none;
+        background: none;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: var(--transition);
+        color: #6c757d;
+    }
+
+    .view-btn.active {
+        background: white;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        color: var(--navy);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .appliances-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .stats-overview {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .quick-actions-bar {
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .action-group {
+            width: 100%;
+            justify-content: space-between;
+        }
+
+        .search-box {
+            width: 100%;
+        }
+
+        .table-header, .table-row {
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+
+        .col {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .col::before {
+            content: attr(data-label);
+            font-weight: 600;
+            color: var(--navy);
+        }
+    }
+</style>
+
+<!-- Helper function for category icons -->
+<script>
+    function getCategoryIcon(category) {
+        const icons = {
+            'Kitchen': 'utensils',
+            'Living Room': 'couch',
+            'Bedroom': 'bed',
+            'Bathroom': 'bath',
+            'Office': 'laptop',
+            'Outdoor': 'tree',
+            'Laundry': 'tshirt',
+            'Entertainment': 'tv',
+            'Lighting': 'lightbulb',
+            'Climate': 'thermometer-half'
+        };
+        return icons[category] || 'plug';
+    }
+</script>
+
+<!-- Appliances JavaScript -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeAppliancesPage();
+    });
+
+    function initializeAppliancesPage() {
+        setupViewControls();
+        setupFilters();
+        setupApplianceControls();
+        setupBulkActions();
+        loadRealTimeData();
+    }
+
+    function setupViewControls() {
+        const viewBtns = document.querySelectorAll('.view-btn');
+        const views = document.querySelectorAll('.appliances-container, .categories-container, .list-container');
+
+        viewBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const view = this.dataset.view;
+                
+                // Update active button
+                viewBtns.forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Show selected view
+                views.forEach(v => {
+                    v.classList.remove('view-active');
+                    v.classList.add('view-hidden');
+                });
+                
+                document.getElementById(`${view}-view`).classList.add('view-active');
+                document.getElementById(`${view}-view`).classList.remove('view-hidden');
+            });
+        });
+    }
+
+    function setupFilters() {
+        const categoryFilter = document.getElementById('categoryFilter');
+        const statusFilter = document.getElementById('statusFilter');
+        const searchInput = document.getElementById('applianceSearch');
+
+        [categoryFilter, statusFilter, searchInput].forEach(filter => {
+            filter.addEventListener('change', applyFilters);
+            filter.addEventListener('input', applyFilters);
+        });
+    }
+
+    function applyFilters() {
+        const category = document.getElementById('categoryFilter').value;
+        const status = document.getElementById('statusFilter').value;
+        const search = document.getElementById('applianceSearch').value.toLowerCase();
+
+        const appliances = document.querySelectorAll('.appliance-card, .table-row, .category-appliance-item');
+        let visibleCount = 0;
+
+        appliances.forEach(appliance => {
+            const applianceCategory = appliance.dataset.category;
+            const applianceStatus = appliance.dataset.status;
+            const applianceName = appliance.querySelector('.appliance-name, [data-label="Appliance"]')?.textContent.toLowerCase() || '';
+
+            const categoryMatch = category === 'all' || applianceCategory === category;
+            const statusMatch = status === 'all' || applianceStatus === status;
+            const searchMatch = search === '' || applianceName.includes(search);
+
+            if (categoryMatch && statusMatch && searchMatch) {
+                appliance.style.display = '';
+                visibleCount++;
+            } else {
+                appliance.style.display = 'none';
+            }
+        });
+
+        // Update count display
+        document.getElementById('filtered-count').textContent = visibleCount;
+
+        // Show/hide empty state
+        const emptyState = document.getElementById('empty-state');
+        if (visibleCount === 0) {
+            emptyState.style.display = 'block';
+        } else {
+            emptyState.style.display = 'none';
+        }
+    }
+
+    function setupApplianceControls() {
+        // Power toggle functionality
+        document.querySelectorAll('.power-toggle').forEach(toggle => {
+            toggle.addEventListener('change', function() {
+                const applianceId = this.dataset.applianceId;
+                const isOn = this.checked;
+                
+                toggleAppliancePower(applianceId, isOn);
+            });
+        });
+
+        // Action buttons
+        document.querySelectorAll('[data-action]').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const action = this.dataset.action;
+                const applianceId = this.dataset.applianceId;
+                
+                handleApplianceAction(action, applianceId);
+            });
+        });
+    }
+
+    function toggleApp

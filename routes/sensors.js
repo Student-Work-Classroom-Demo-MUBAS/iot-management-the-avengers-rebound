@@ -1,12 +1,19 @@
 const express = require('express');
 const router = express.Router();
 const { Op } = require('sequelize');
-const { validateSensorData, validateEnergyQuery } = require('../middleware/validation');
 
-// GET /api/sensors - Get all sensors
-router.get('/', async (req, res) => {
+// Import middleware - your files export exactly what we need
+const auth = require('../middleware/auth');
+const { validateEnergyQuery } = require('../middleware/validation');
+
+// Note: We're only importing validateEnergyQuery since that's what's used in this file
+// validateSensorData is available but not used in your current routes
+
+// GET /api/sensors - Get all sensors (Protected)
+router.get('/', auth, async (req, res) => {
   try {
-    const { Sensor } = req.app.get('models');
+    const models = req.app.get('models');
+    const { Sensor } = models;
     
     const sensors = await Sensor.findAll({
       order: [['name', 'ASC']]
@@ -27,10 +34,11 @@ router.get('/', async (req, res) => {
   }
 });
 
-// GET /api/sensors/:id - Get specific sensor by ID
-router.get('/:id', async (req, res) => {
+// GET /api/sensors/:id - Get specific sensor by ID (Protected)
+router.get('/:id', auth, async (req, res) => {
   try {
-    const { Sensor, SensorData } = req.app.get('models');
+    const models = req.app.get('models');
+    const { Sensor, SensorData } = models;
     const { id } = req.params;
 
     const sensor = await Sensor.findByPk(id, {
@@ -63,10 +71,11 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// GET /api/sensors/:id/data - Get sensor data with filtering
-router.get('/:id/data', validateEnergyQuery, async (req, res) => {
+// GET /api/sensors/:id/data - Get sensor data with filtering (Protected)
+router.get('/:id/data', auth, validateEnergyQuery, async (req, res) => {
   try {
-    const { Sensor, SensorData } = req.app.get('models');
+    const models = req.app.get('models');
+    const { Sensor, SensorData } = models;
     const { id } = req.params;
     const { hours = 24, limit = 1000, startDate, endDate } = req.query;
 
@@ -93,21 +102,33 @@ router.get('/:id/data', validateEnergyQuery, async (req, res) => {
 
     const sensorData = await SensorData.findAll({
       where: {
-        sensor_id: id,
+        sensorId: id,
         ...dateFilter
       },
       order: [['timestamp', 'ASC']],
       limit: parseInt(limit)
     });
 
+    // Calculate statistics
+    const stats = {
+      count: sensorData.length,
+      average: sensorData.length > 0 ? 
+        sensorData.reduce((sum, item) => sum + item.value, 0) / sensorData.length : 0,
+      min: sensorData.length > 0 ? 
+        Math.min(...sensorData.map(item => item.value)) : 0,
+      max: sensorData.length > 0 ? 
+        Math.max(...sensorData.map(item => item.value)) : 0
+    };
+
     res.json({
       success: true,
       data: sensorData,
-      count: sensorData.length,
+      statistics: stats,
       sensor: {
         id: sensor.id,
         name: sensor.name,
         type: sensor.type,
+        location: sensor.location,
         unit: sensor.unit
       }
     });
@@ -121,11 +142,12 @@ router.get('/:id/data', validateEnergyQuery, async (req, res) => {
   }
 });
 
-// POST /api/sensors - Create a new sensor
-router.post('/', async (req, res) => {
+// POST /api/sensors - Create a new sensor (Protected)
+router.post('/', auth, async (req, res) => {
   try {
-    const { Sensor } = req.app.get('models');
-    const { name, type, location, unit, calibration_factor = 1.0 } = req.body;
+    const models = req.app.get('models');
+    const { Sensor } = models;
+    const { name, type, location, unit, calibrationFactor = 1.0, deviceId, userId } = req.body;
 
     // Validate required fields
     if (!name || !type || !location || !unit) {
@@ -149,8 +171,10 @@ router.post('/', async (req, res) => {
       type,
       location,
       unit,
-      calibration_factor,
-      is_active: true
+      calibrationFactor,
+      deviceId: deviceId || null,
+      userId: userId || req.user.id,
+      status: 'ACTIVE'
     });
 
     res.status(201).json({
@@ -168,12 +192,13 @@ router.post('/', async (req, res) => {
   }
 });
 
-// PUT /api/sensors/:id - Update a sensor
-router.put('/:id', async (req, res) => {
+// PUT /api/sensors/:id - Update a sensor (Protected)
+router.put('/:id', auth, async (req, res) => {
   try {
-    const { Sensor } = req.app.get('models');
+    const models = req.app.get('models');
+    const { Sensor } = models;
     const { id } = req.params;
-    const { name, type, location, unit, calibration_factor, is_active } = req.body;
+    const { name, type, location, unit, calibrationFactor, status } = req.body;
 
     const sensor = await Sensor.findByPk(id);
     if (!sensor) {
@@ -189,8 +214,8 @@ router.put('/:id', async (req, res) => {
     if (type !== undefined) updateData.type = type;
     if (location !== undefined) updateData.location = location;
     if (unit !== undefined) updateData.unit = unit;
-    if (calibration_factor !== undefined) updateData.calibration_factor = calibration_factor;
-    if (is_active !== undefined) updateData.is_active = is_active;
+    if (calibrationFactor !== undefined) updateData.calibrationFactor = calibrationFactor;
+    if (status !== undefined) updateData.status = status;
 
     await sensor.update(updateData);
 
@@ -209,10 +234,11 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// DELETE /api/sensors/:id - Delete a sensor
-router.delete('/:id', async (req, res) => {
+// DELETE /api/sensors/:id - Delete a sensor (Protected)
+router.delete('/:id', auth, async (req, res) => {
   try {
-    const { Sensor, SensorData } = req.app.get('models');
+    const models = req.app.get('models');
+    const { Sensor, SensorData } = models;
     const { id } = req.params;
 
     const sensor = await Sensor.findByPk(id);
@@ -225,7 +251,7 @@ router.delete('/:id', async (req, res) => {
 
     // Delete associated sensor data first (due to foreign key constraint)
     await SensorData.destroy({
-      where: { sensor_id: id }
+      where: { sensorId: id }
     });
 
     // Delete the sensor
@@ -245,10 +271,11 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
-// GET /api/sensors/stats/summary - Get sensor statistics summary
-router.get('/stats/summary', async (req, res) => {
+// GET /api/sensors/stats/summary - Get sensor statistics summary (Protected)
+router.get('/stats/summary', auth, async (req, res) => {
   try {
-    const { Sensor, SensorData } = req.app.get('models');
+    const models = req.app.get('models');
+    const { Sensor, SensorData } = models;
 
     // Get all sensors with their latest reading
     const sensors = await Sensor.findAll({
@@ -258,7 +285,7 @@ router.get('/stats/summary', async (req, res) => {
         limit: 1,
         order: [['timestamp', 'DESC']]
       }],
-      where: { is_active: true }
+      where: { status: 'ACTIVE' }
     });
 
     const summary = sensors.map(sensor => ({
@@ -267,12 +294,12 @@ router.get('/stats/summary', async (req, res) => {
       type: sensor.type,
       location: sensor.location,
       unit: sensor.unit,
-      last_reading: sensor.readings[0] ? {
+      lastReading: sensor.readings[0] ? {
         value: sensor.readings[0].value,
         timestamp: sensor.readings[0].timestamp
       } : null,
-      is_active: sensor.is_active,
-      last_updated: sensor.updated_at
+      status: sensor.status,
+      lastUpdated: sensor.updatedAt
     }));
 
     res.json({
@@ -290,10 +317,11 @@ router.get('/stats/summary', async (req, res) => {
   }
 });
 
-// POST /api/sensors/data/bulk - Bulk insert sensor data (for multiple sensors)
-router.post('/data/bulk', async (req, res) => {
+// POST /api/sensors/data/bulk - Bulk insert sensor data (Protected)
+router.post('/data/bulk', auth, async (req, res) => {
   try {
-    const { Sensor, SensorData } = req.app.get('models');
+    const models = req.app.get('models');
+    const { Sensor, SensorData } = models;
     const { readings } = req.body;
 
     if (!Array.isArray(readings) || readings.length === 0) {
@@ -308,62 +336,72 @@ router.post('/data/bulk', async (req, res) => {
 
     for (const reading of readings) {
       try {
-        const { sensorType, value, unit, location } = reading;
+        const { sensorType, value, unit, location, sensorId, timestamp = Date.now() } = reading;
 
         // Validate required fields
-        if (!sensorType || value === undefined || !unit || !location) {
+        if (!sensorType || value === undefined || !unit) {
           errors.push({
             reading,
-            error: 'Missing required fields: sensorType, value, unit, location'
+            error: 'Missing required fields: sensorType, value, unit'
           });
           continue;
         }
 
-        // Find or create sensor
-        let sensor = await Sensor.findOne({
-          where: { type: sensorType, location }
-        });
+        let sensor;
 
-        if (!sensor) {
-          sensor = await Sensor.create({
-            name: `${sensorType} Sensor - ${location}`,
-            type: sensorType,
-            location: location,
-            unit: unit,
-            calibration_factor: 1.0,
-            is_active: true
+        // Use provided sensorId or find/create by type and location
+        if (sensorId) {
+          sensor = await Sensor.findByPk(sensorId);
+          if (!sensor) {
+            errors.push({
+              reading,
+              error: `Sensor with ID ${sensorId} not found`
+            });
+            continue;
+          }
+        } else if (location) {
+          // Find or create sensor by type and location
+          sensor = await Sensor.findOne({
+            where: { type: sensorType, location }
           });
-        }
 
-        // Update sensor last reading
-        await sensor.update({
-          last_reading: new Date(),
-          last_value: value
-        });
+          if (!sensor) {
+            sensor = await Sensor.create({
+              name: `${sensorType} Sensor - ${location}`,
+              type: sensorType,
+              location: location,
+              unit: unit,
+              calibrationFactor: 1.0,
+              status: 'ACTIVE',
+              userId: req.user.id
+            });
+          }
+        } else {
+          errors.push({
+            reading,
+            error: 'Either sensorId or location must be provided'
+          });
+          continue;
+        }
 
         // Create sensor data record
         const sensorData = await SensorData.create({
-          sensor_id: sensor.id,
-          value: value,
+          sensorId: sensor.id,
+          value: parseFloat(value),
           unit: unit,
-          location: location,
-          timestamp: reading.timestamp || new Date()
+          location: sensor.location,
+          timestamp: timestamp
+        });
+
+        // Update sensor last reading timestamp
+        await sensor.update({
+          lastReading: new Date()
         });
 
         results.push({
-          sensor_id: sensor.id,
-          data_id: sensorData.id,
+          sensorId: sensor.id,
+          dataId: sensorData.id,
           success: true
-        });
-
-        // Emit real-time update for each sensor reading
-        req.app.get('io').emit('sensor-update', {
-          sensorType,
-          value,
-          unit,
-          location,
-          timestamp: sensorData.timestamp,
-          sensorId: sensor.id
         });
 
       } catch (error) {
@@ -394,18 +432,19 @@ router.post('/data/bulk', async (req, res) => {
   }
 });
 
-// GET /api/sensors/types/count - Get count of sensors by type
-router.get('/types/count', async (req, res) => {
+// GET /api/sensors/types/count - Get count of sensors by type (Protected)
+router.get('/types/count', auth, async (req, res) => {
   try {
-    const { Sensor } = req.app.get('models');
+    const models = req.app.get('models');
+    const { Sensor, sequelize } = models;
 
     const sensorCounts = await Sensor.findAll({
       attributes: [
         'type',
-        [Sequelize.fn('COUNT', Sequelize.col('id')), 'count']
+        [sequelize.fn('COUNT', sequelize.col('id')), 'count']
       ],
       group: ['type'],
-      where: { is_active: true }
+      where: { status: 'ACTIVE' }
     });
 
     res.json({
@@ -417,6 +456,76 @@ router.get('/types/count', async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to fetch sensor type counts',
+      message: error.message
+    });
+  }
+});
+
+// GET /api/sensors/type/:type - Get sensors by type (Protected)
+router.get('/type/:type', auth, async (req, res) => {
+  try {
+    const models = req.app.get('models');
+    const { Sensor } = models;
+    const { type } = req.params;
+
+    const sensors = await Sensor.findAll({
+      where: { 
+        type: type,
+        status: 'ACTIVE'
+      },
+      order: [['name', 'ASC']]
+    });
+
+    res.json({
+      success: true,
+      data: sensors,
+      count: sensors.length
+    });
+  } catch (error) {
+    console.error('Error fetching sensors by type:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch sensors by type',
+      message: error.message
+    });
+  }
+});
+
+// PATCH /api/sensors/:id/status - Update sensor status (Protected)
+router.patch('/:id/status', auth, async (req, res) => {
+  try {
+    const models = req.app.get('models');
+    const { Sensor } = models;
+    const { id } = req.params;
+    const { status } = req.body;
+
+    if (!['ACTIVE', 'INACTIVE', 'MAINTENANCE'].includes(status)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Status must be ACTIVE, INACTIVE, or MAINTENANCE'
+      });
+    }
+
+    const sensor = await Sensor.findByPk(id);
+    if (!sensor) {
+      return res.status(404).json({
+        success: false,
+        error: 'Sensor not found'
+      });
+    }
+
+    await sensor.update({ status });
+
+    res.json({
+      success: true,
+      message: `Sensor status updated to ${status}`,
+      data: sensor
+    });
+  } catch (error) {
+    console.error('Error updating sensor status:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to update sensor status',
       message: error.message
     });
   }

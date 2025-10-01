@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <meta name="description" content="Login to your Smart Home Energy Monitoring System">
+    
+    <!-- Preload critical resources -->
+    <link rel="preload" href="/css/style.css" as="style">
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" as="style">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
+    
+    <style>
+        /* Additional auth-specific styles */
+        .password-field {
+            position: relative;
+        }
+        
+        .toggle-password {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #6c757d;
+            cursor: pointer;
+            padding: 5px;
+        }
+        
+        .toggle-password:hover {
+            color: var(--olive-green);
+        }
+        
+        .form-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 20px 0;
+        }
+        
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+        
+        .remember-me input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+        }
+        
+        .forgot-password {
+            color: var(--olive-green);
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+        
+        .forgot-password:hover {
+            text-decoration: underline;
+        }
+        
+        .btn-loading {
+            position: relative;
+            color: transparent;
+        }
+        
+        .btn-loading::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            top: 50%;
+            left: 50%;
+            margin-left: -10px;
+            margin-top: -10px;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .demo-credentials {
+            background: rgba(10, 35, 66, 0.05);
+            border-left: 4px solid var(--olive-green);
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        
+        .demo-credentials h4 {
+            margin: 0 0 10px 0;
+            color: var(--navy);
+            font-size: 0.9rem;
+        }
+        
+        .demo-credentials p {
+            margin: 5px 0;
+            font-size: 0.85rem;
+            color: #6c757d;
+        }
+        
+        .social-login {
+            margin: 25px 0;
+            text-align: center;
+        }
+        
+        .social-login .divider {
+            display: flex;
+            align-items: center;
+            margin: 20px 0;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        
+        .social-login .divider::before,
+        .social-login .divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .social-login .divider::before {
+            margin-right: 10px;
+        }
+        
+        .social-login .divider::after {
+            margin-left: 10px;
+        }
+        
+        .social-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .social-btn {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #e9ecef;
+            border-radius: var(--radius);
+            background: white;
+            color: #6c757d;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .social-btn:hover {
+            border-color: var(--olive-green);
+            color: var(--olive-green);
+        }
+        
+        /* Accessibility improvements */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+        
+        /* Focus styles for better accessibility */
+        input:focus, button:focus {
+            outline: 2px solid var(--olive-green);
+            outline-offset: 2px;
+        }
+    </style>
+</head>
+<body class="auth-page">
+    <!-- Skip to main content for accessibility -->
+    <a href="#main-content" class="sr-only">Skip to main content</a>
+    
+    <div class="auth-container">
+        <div class="auth-card">
+            <!-- Logo and branding -->
+            <div class="auth-header" style="text-align: center; margin-bottom: 30px;">
+                <div style="font-size: 3rem; color: var(--olive-green); margin-bottom: 10px;">
+                    <i class="fas fa-home"></i>
+                </div>
+                <h1 style="color: var(--navy); margin: 0; font-size: 1.8rem; font-weight: 600;">Smart Home</h1>
+                <p style="color: #6c757d; margin: 5px 0 0 0; font-size: 1rem;">Energy Monitoring System</p>
+            </div>
+
+            <h2 style="text-align: center; margin-bottom: 10px;">Welcome Back</h2>
+            <p style="text-align: center; color: #6c757d; margin-bottom: 30px;">Sign in to your account</p>
+            
+            <!-- Alert Messages -->
+            <% if (error) { %>
+                <div class="alert error" role="alert" aria-live="polite">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <%= error %>
+                </div>
+            <% } %>
+            
+            <% if (success) { %>
+                <div class="alert success" role="alert" aria-live="polite">
+                    <i class="fas fa-check-circle"></i>
+                    <%= success %>
+                </div>
+            <% } %>
+
+            <!-- Demo credentials for development -->
+            <% if (process.env.NODE_ENV === 'development') { %>
+                <div class="demo-credentials" role="complementary">
+                    <h4><i class="fas fa-vial"></i> Demo Credentials</h4>
+                    <p><strong>Email:</strong> admin@smarthome.com</p>
+                    <p><strong>Password:</strong> admin123</p>
+                </div>
+            <% } %>
+
+            <!-- Login Form -->
+            <form method="POST" action="/auth/login" id="loginForm" novalidate>
+                <!-- CSRF Protection (would need CSRF middleware) -->
+                <!-- <input type="hidden" name="_csrf" value="<%= csrfToken %>"> -->
+                
+                <!-- Email Field -->
+                <div class="form-group">
+                    <label for="email" class="sr-only">Email Address</label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-envelope"></i>
+                        <input 
+                            type="email" 
+                            id="email"
+                            name="email" 
+                            placeholder="Email Address" 
+                            value="<%= email || '' %>" 
+                            required
+                            autocomplete="email"
+                            aria-describedby="email-error"
+                        >
+                    </div>
+                    <div id="email-error" class="error-message" style="display: none;"></div>
+                </div>
+
+                <!-- Password Field -->
+                <div class="form-group">
+                    <label for="password" class="sr-only">Password</label>
+                    <div class="input-with-icon password-field">
+                        <i class="fas fa-lock"></i>
+                        <input 
+                            type="password" 
+                            id="password"
+                            name="password" 
+                            placeholder="Password" 
+                            required
+                            autocomplete="current-password"
+                            aria-describedby="password-error"
+                        >
+                        <button type="button" class="toggle-password" aria-label="Show password">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                    <div id="password-error" class="error-message" style="display: none;"></div>
+                </div>
+
+                <!-- Form Options -->
+                <div class="form-footer">
+                    <label class="remember-me">
+                        <input type="checkbox" name="remember" id="remember">
+                        Remember me
+                    </label>
+                    <a href="/auth/forgot-password" class="forgot-password">Forgot password?</a>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" class="btn btn-primary" id="submitBtn">
+                    <span class="btn-text">Sign In</span>
+                    <div class="btn-loading" style="display: none;"></div>
+                </button>
+            </form>
+
+            <!-- Social Login (Optional) -->
+            <div class="social-login">
+                <div class="divider">Or continue with</div>
+                <div class="social-buttons">
+                    <button type="button" class="social-btn" disabled>
+                        <i class="fab fa-google"></i>
+                        Google
+                    </button>
+                    <button type="button" class="social-btn" disabled>
+                        <i class="fab fa-github"></i>
+                        GitHub
+                    </button>
+                </div>
+            </div>
+
+            <!-- Registration Link -->
+            <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--light-grey);">
+                <p style="margin: 0; color: #6c757d;">
+                    Don't have an account? 
+                    <a href="/auth/register" style="color: var(--olive-green); text-decoration: none; font-weight: 600;">
+                        Create one here
+                    </a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript for enhanced functionality -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginForm = document.getElementById('loginForm');
+            const submitBtn = document.getElementById('submitBtn');
+            const btnText = submitBtn.querySelector('.btn-text');
+            const btnLoading = submitBtn.querySelector('.btn-loading');
+            const togglePassword = document.querySelector('.toggle-password');
+            const passwordInput = document.getElementById('password');
+            
+            // Toggle password visibility
+            togglePassword.addEventListener('click', function() {
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                this.querySelector('i').className = type === 'password' ? 'fas fa-eye' : 'fas fa-eye-slash';
+                this.setAttribute('aria-label', type === 'password' ? 'Show password' : 'Hide password');
+            });
+            
+            // Client-side validation
+            loginForm.addEventListener('submit', function(e) {
+                let isValid = true;
+                
+                // Clear previous errors
+                document.querySelectorAll('.error-message').forEach(el => {
+                    el.style.display = 'none';
+                    el.textContent = '';
+                });
+                
+                // Email validation
+                const email = document.getElementById('email').value.trim();
+                const emailError = document.getElementById('email-error');
+                if (!email) {
+                    emailError.textContent = 'Email is required';
+                    emailError.style.display = 'block';
+                    isValid = false;
+                } else if (!isValidEmail(email)) {
+                    emailError.textContent = 'Please enter a valid email address';
+                    emailError.style.display = 'block';
+                    isValid = false;
+                }
+                
+                // Password validation
+                const password = document.getElementById('password').value;
+                const passwordError = document.getElementById('password-error');
+                if (!password) {
+                    passwordError.textContent = 'Password is required';
+                    passwordError.style.display = 'block';
+                    isValid = false;
+                } else if (password.length < 6) {
+                    passwordError.textContent = 'Password must be at least 6 characters';
+                    passwordError.style.display = 'block';
+                    isValid = false;
+                }
+                
+                if (!isValid) {
+                    e.preventDefault();
+                    // Focus on first error
+                    const firstError = document.querySelector('.error-message[style="display: block;"]');
+                    if (firstError) {
+                        const inputId = firstError.id.replace('-error', '');
+                        document.getElementById(inputId)?.focus();
+                    }
+                } else {
+                    // Show loading state
+                    btnText.style.display = 'none';
+                    btnLoading.style.display = 'block';
+                    submitBtn.disabled = true;
+                    
+                    // Form will submit normally
+                }
+            });
+            
+            // Real-time validation
+            document.getElementById('email').addEventListener('blur', validateEmail);
+            document.getElementById('password').addEventListener('blur', validatePassword);
+            
+            function validateEmail() {
+                const email = this.value.trim();
+                const errorElement = document.getElementById('email-error');
+                
+                if (!email) {
+                    showError(this, errorElement, 'Email is required');
+                } else if (!isValidEmail(email)) {
+                    showError(this, errorElement, 'Please enter a valid email address');
+                } else {
+                    clearError(this, errorElement);
+                }
+            }
+            
+            function validatePassword() {
+                const password = this.value;
+                const errorElement = document.getElementById('password-error');
+                
+                if (!password) {
+                    showError(this, errorElement, 'Password is required');
+                } else if (password.length < 6) {
+                    showError(this, errorElement, 'Password must be at least 6 characters');
+                } else {
+                    clearError(this, errorElement);
+                }
+            }
+            
+            function showError(input, errorElement, message) {
+                errorElement.textContent = message;
+                errorElement.style.display = 'block';
+                input.setAttribute('aria-invalid', 'true');
+                input.style.borderColor = '#e74c3c';
+            }
+            
+            function clearError(input, errorElement) {
+                errorElement.style.display = 'none';
+                input.setAttribute('aria-invalid', 'false');
+                input.style.borderColor = '';
+            }
+            
+            function isValidEmail(email) {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                return emailRegex.test(email);
+            }
+            
+            // Auto-focus email field on page load
+            document.getElementById('email')?.focus();
+            
+            // Handle browser autofill
+            loginForm.addEventListener('change', function() {
+                validateEmail.call(document.getElementById('email'));
+                validatePassword.call(document.getElementById('password'));
+            });
+        });
+    </script>
+</body>
+</html>
