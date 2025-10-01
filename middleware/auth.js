@@ -1,5 +1,7 @@
+// middleware/auth.js
+
 const jwt = require('jsonwebtoken');
-const User = require('../models/User');
+const { User } = require('../models'); // Adjust the path as needed
 
 const auth = async (req, res, next) => {
   try {
@@ -10,7 +12,10 @@ const auth = async (req, res, next) => {
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id).select('-password');
+    // In the login, we signed the token with `userId`, so we use `decoded.userId`
+    const user = await User.findByPk(decoded.userId, {
+      attributes: { exclude: ['password'] }
+    });
     
     if (!user) {
       return res.status(401).json({ error: 'Token is not valid.' });

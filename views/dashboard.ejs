@@ -1,217 +1,421 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Smart Home Dashboard</title>
-  <style>
-    table { border-collapse: collapse; width: 100%; }
-    th, td { border: 1px solid #ccc; padding: 8px; }
-    th { background: #eee; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <style>
+        /* Reset and base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        html, body {
+            height: 100%;
+            overflow: hidden; /* Prevent body scrolling */
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .dashboard-container {
+            width: 95%;
+            max-width: 1400px;
+            height: 95vh;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        /* Header */
+        .dashboard-header {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            padding: 25px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+        
+        .header-title h1 {
+            font-size: 28px;
+            font-weight: 300;
+            margin-bottom: 5px;
+        }
+        
+        .header-title .subtitle {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+        
+        .last-update {
+            text-align: right;
+        }
+        
+        .last-update .time {
+            font-size: 16px;
+            font-weight: 500;
+        }
+        
+        .last-update .label {
+            font-size: 12px;
+            opacity: 0.7;
+        }
+        
+        /* Main Content */
+        .dashboard-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            padding: 0;
+        }
+        
+        /* Statistics Grid */
+        .stats-section {
+            padding: 25px 30px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+            flex-shrink: 0;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            border-left: 4px solid #3498db;
+            text-align: center;
+            transition: transform 0.2s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-2px);
+        }
+        
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #2c3e50;
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 13px;
+            color: #7f8c8d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        /* Data Section */
+        .data-section {
+            flex: 1;
+            padding: 25px 30px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .section-header h2 {
+            color: #2c3e50;
+            font-size: 22px;
+            font-weight: 500;
+        }
+        
+        .table-container {
+            flex: 1;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            overflow: hidden;
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .data-table thead {
+            background: #34495e;
+            color: white;
+        }
+        
+        .data-table th {
+            padding: 15px 12px;
+            text-align: left;
+            font-weight: 500;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .data-table tbody {
+            display: block;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .data-table thead, .data-table tbody tr {
+            display: table;
+            width: 100%;
+            table-layout: fixed;
+        }
+        
+        .data-table td {
+            padding: 12px;
+            border-bottom: 1px solid #ecf0f1;
+            color: #2c3e50;
+        }
+        
+        .data-table tbody tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .data-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+        
+        /* Status indicators */
+        .status-online {
+            color: #27ae60;
+            font-weight: 600;
+        }
+        
+        .status-offline {
+            color: #e74c3c;
+            font-weight: 600;
+        }
+        
+        /* Error and empty states */
+        .error-message {
+            background: #ffeaa7;
+            color: #d35400;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #7f8c8d;
+        }
+        
+        .empty-state .icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            .dashboard-container {
+                width: 100%;
+                height: 100vh;
+                border-radius: 0;
+            }
+            
+            .dashboard-header {
+                padding: 20px;
+                flex-direction: column;
+                text-align: center;
+                gap: 10px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .data-section {
+                padding: 20px;
+            }
+            
+            .data-table {
+                font-size: 14px;
+            }
+            
+            .data-table th,
+            .data-table td {
+                padding: 10px 8px;
+            }
+        }
+    </style>
 </head>
 <body>
-  <%- include('partials/header') %>
-  <%- include('partials/sidebar') %>
-
-<<<<<<< Updated upstream
-<!-- Main Content -->
-<div class="main-content">
-    <div class="header">
-        <div class="page-title">
-            <h2>Home Energy Dashboard</h2>
-            <p>Monitor and manage your home's energy consumption</p>
-        </div>
-        <div class="search-bar">
-            <i class="fas fa-search"></i>
-            <input type="text" placeholder="Search devices, rooms...">
-        </div>
-        <div class="user-info">
-            <div class="notifications">
-                <i class="fas fa-bell"></i>
-                <span class="notification-badge">3</span>
+    <div class="dashboard-container">
+        <!-- Header -->
+        <header class="dashboard-header">
+            <div class="header-title">
+                <h1>Smart Home Energy Monitor</h1>
+                <div class="subtitle">Real-time Sensor Data Dashboard</div>
             </div>
-            <div class="user-details">
-                <% if (data.user && data.user.image) { %>
-                    <img src="<%= data.user.image %>" alt="User">
-                <% } else { %>
-                    <img src="/public\images\png9.jpg" alt="User">
-                <% } %>
-                <div>
-                    <div class="user-name"><%= data.user ? data.user.name : 'Chikondi Chambamba' %></div>
-                    <div class="user-role"><%= data.user ? data.user.role : 'N/A' %></div>
+            <div class="last-update">
+                <div class="time"><%= currentTime %></div>
+                <div class="label">Last Updated</div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="dashboard-content">
+            <!-- Statistics Section -->
+            <section class="stats-section">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <span class="stat-value"><%= statistics.total_records || 0 %></span>
+                        <span class="stat-label">Total Records</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-value"><%= (statistics.avg_light || 0).toFixed(1) %></span>
+                        <span class="stat-label">Light (lux)</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-value"><%= (statistics.avg_temp || 0).toFixed(1) %>°C</span>
+                        <span class="stat-label">Temperature</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-value"><%= (statistics.avg_humidity || 0).toFixed(1) %>%</span>
+                        <span class="stat-label">Humidity</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-value"><%= (statistics.avg_current || 0).toFixed(3) %>A</span>
+                        <span class="stat-label">Current</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-value"><%= (statistics.avg_power || 0).toFixed(1) %>W</span>
+                        <span class="stat-label">Power</span>
+                    </div>
                 </div>
-            </div>
-        </div>
+            </section>
+
+            <!-- Data Table Section -->
+            <section class="data-section">
+                <div class="section-header">
+                    <h2>Recent Sensor Readings</h2>
+                    <div class="record-count">
+                        Showing <%= sensorData.length %> records
+                    </div>
+                </div>
+
+                <% if (error) { %>
+                    <div class="error-message">
+                        ⚠️ <%= error %>
+                    </div>
+                <% } %>
+
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 20%">Timestamp</th>
+                                <th style="width: 15%">Light (lux)</th>
+                                <th style="width: 15%">Temp (°C)</th>
+                                <th style="width: 15%">Humidity (%)</th>
+                                <th style="width: 15%">Current (A)</th>
+                                <th style="width: 20%">Power (W)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% if (sensorData && sensorData.length > 0) { %>
+                                <% sensorData.forEach((data, index) => { %>
+                                    <tr>
+                                        <td>
+                                            <div style="font-weight: 500;">
+                                                <%= new Date(data.createdAt).toLocaleDateString() %>
+                                            </div>
+                                            <div style="font-size: 12px; color: #7f8c8d;">
+                                                <%= new Date(data.createdAt).toLocaleTimeString() %>
+                                            </div>
+                                        </td>
+                                        <td style="color: #e67e22;">
+                                            <%= (data.light_intensity || 0).toFixed(1) %>
+                                        </td>
+                                        <td style="color: #e74c3c;">
+                                            <%= (data.temperature || 0).toFixed(1) %>
+                                        </td>
+                                        <td style="color: #3498db;">
+                                            <%= (data.humidity || 0).toFixed(1) %>
+                                        </td>
+                                        <td style="color: #9b59b6;">
+                                            <%= (data.current || 0).toFixed(3) %>
+                                        </td>
+                                        <td style="color: #27ae60; font-weight: 600;">
+                                            <%= (data.power || 0).toFixed(1) %>
+                                        </td>
+                                    </tr>
+                                <% }) %>
+                            <% } else { %>
+                                <tr>
+                                    <td colspan="6">
+                                        <div class="empty-state">
+                                            <div class="icon">📊</div>
+                                            <h3>No Sensor Data Available</h3>
+                                            <p>Connect your ESP32 device to start receiving data</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <% } %>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
     </div>
-=======
-  <!-- Main Content -->
-  <div class="main-content">
-      <div class="header">
-          <div class="page-title">
-              <h2>Home Energy Dashboard</h2>
-              <p>Monitor and manage your home's energy consumption</p>
-          </div>
-          <div class="search-bar">
-              <i class="fas fa-search"></i>
-              <input type="text" placeholder="Search devices, rooms...">
-          </div>
-          <div class="user-info">
-              <div class="notifications">
-                  <i class="fas fa-bell"></i>
-                  <span class="notification-badge">3</span>
-              </div>
-              <div class="user-details">
-                  <% if (data.user) { %>
-                      <img src="<%= data.user.image %>" alt="User">
-                      <div>
-                          <div class="user-name"><%= data.user.name %></div>
-                          <div class="user-role"><%= data.user.role %></div>
-                      </div>
-                  <% } else { %>
-                      <img src="public\images\png8.png" alt="User">
-                      <div>
-                          <div class="user-name">Chikondi Chambamba</div>
-                          <div class="user-role">Home Owner</div>
-                      </div>
-                  <% } %>
-              </div>
-          </div>
-      </div>
->>>>>>> Stashed changes
 
-      <!-- Dashboard Cards -->
-      <div class="dashboard-cards">
-          <div class="card current">
-              <div class="card-header">
-                  <div class="card-title">Current Usage</div>
-                  <div class="card-icon current-icon">
-                      <i class="fas fa-bolt"></i>
-                  </div>
-              </div>
-              <div class="card-value" id="current-usage"><%= data.cards.currentUsage.value %></div>
-              <div class="card-footer">
-                  <span>From last hour</span>
-                  <span class="trend <%= data.cards.currentUsage.trend %>">
-                      <i class="fas fa-arrow-<%= data.cards.currentUsage.trend %>"></i> 
-                      <%= data.cards.currentUsage.trendValue %>
-                  </span>
-              </div>
-          </div>
-
-          <div class="card temp">
-              <div class="card-header">
-                  <div class="card-title">Temperature</div>
-                  <div class="card-icon temp-icon">
-                      <i class="fas fa-temperature-high"></i>
-                  </div>
-              </div>
-              <div class="card-value" id="temperature"><%= data.cards.temperature.value %></div>
-              <div class="card-footer">
-                  <span>Indoor</span>
-                  <span>Humidity: <%= data.cards.temperature.humidity %></span>
-              </div>
-          </div>
-
-          <div class="card light">
-              <div class="card-header">
-                  <div class="card-title">Light Level</div>
-                  <div class="card-icon light-icon">
-                      <i class="fas fa-sun"></i>
-                  </div>
-              </div>
-              <div class="card-value" id="light-level"><%= data.cards.lightLevel.value %></div>
-              <div class="card-footer">
-                  <span><%= data.cards.lightLevel.location %></span>
-                  <span><%= data.cards.lightLevel.status %></span>
-              </div>
-          </div>
-
-          <div class="card energy">
-              <div class="card-header">
-                  <div class="card-title">Energy Today</div>
-                  <div class="card-icon energy-icon">
-                      <i class="fas fa-plug"></i>
-                  </div>
-              </div>
-              <div class="card-value" id="energy-today"><%= data.cards.energyToday.value %></div>
-              <div class="card-footer">
-                  <span>Estimated cost: <%= data.cards.energyToday.cost %></span>
-                  <span class="trend <%= data.cards.energyToday.trend %>">
-                      <i class="fas fa-arrow-<%= data.cards.energyToday.trend %>"></i> 
-                      <%= data.cards.energyToday.trendValue %>
-                  </span>
-              </div>
-          </div>
-      </div>
-
-      <!-- Charts Section -->
-      <div class="charts">
-          <div class="chart-container">
-              <div class="chart-header">
-                  <div class="chart-title">Energy Consumption - Last 24 Hours</div>
-                  <div class="chart-actions">
-                      <button class="chart-btn active">Day</button>
-                      <button class="chart-btn">Week</button>
-                      <button class="chart-btn">Month</button>
-                  </div>
-              </div>
-              <canvas id="energyChart" height="300"></canvas>
-          </div>
-          <div class="chart-container">
-    <!-- Devices Section -->
-    <div class="devices-container">
-        <div class="devices-header">
-            <div class="devices-title">Connected Appliances</div>
-            <button class="btn">
-                <i class="fas fa-plus"></i> Add Device
-            </button>
-        </div>
-        <table class="device-table">
-            <thead>
-                <tr>
-                    <th>Device</th>
-                    <th>Location</th>
-                    <th>Power</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <% data.devices.forEach(function(device) { %>
-                <tr>
-                    <td>
-                        <div class="device-info">
-                            <div class="device-icon">
-                                <i class="<%= device.icon %>"></i>
-                            </div>
-                            <div>
-                                <div class="device-name"><%= device.name %></div>
-                                <div class="device-location"><%= device.model %></div>
-                            </div>
-                        </div>
-                    </td>
-                    <td><%= device.location %></td>
-                    <td><%= device.power %></td>
-                    <td>
-                        <span class="status status-<%= device.status.toLowerCase() %>">
-                            <%= device.status %>
-                        </span>
-                    </td>
-                        <button class="action-btn edit-btn"><i class="fas fa-edit"></i></button>
-                        <button class="action-btn delete-btn"><i class="fas fa-trash"></i></button>
-                        <button class="device-control" data-device-id="<%= device._id %>" data-action="toggle" data-status="<%= device.status %>">
-                        <i class="fas fa-power-off"></i>
-                        </button>
-                    </td>
-                </tr>
-                <% }); %>
-            </tbody>
-        </table>
-    </div>
-</div>
-<<<<<<< Updated upstream
-=======
-
-<%- include('partials/footer') %>
+    <!-- Minimal, safe JavaScript -->
+    <script>
+        // Safe initialization - no auto-refresh, no scrolling issues
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Dashboard loaded successfully');
+            
+            // Only add smooth scrolling to table if needed
+            const tableBody = document.querySelector('.data-table tbody');
+            if (tableBody) {
+                tableBody.addEventListener('scroll', function() {
+                    // Smooth table scrolling only
+                });
+            }
+            
+            // Optional: Update time every minute
+            setInterval(() => {
+                const timeElement = document.querySelector('.last-update .time');
+                if (timeElement) {
+                    timeElement.textContent = new Date().toLocaleString();
+                }
+            }, 60000);
+        });
+    </script>
 </body>
 </html>
->>>>>>> Stashed changes

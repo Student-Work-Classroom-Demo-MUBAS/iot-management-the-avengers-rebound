@@ -1,32 +1,500 @@
-<div class="sidebar">
-    <div class="logo">
-        <i class="fas fa-home"></i>
-        <h1>Smart Home Energy</h1>
+<!-- views/partials/sidebar.ejs -->
+<nav class="sidebar" role="navigation" aria-label="Main navigation">
+    <div class="sidebar-content">
+        <!-- Logo Section -->
+        <div class="logo" role="banner">
+            <div class="logo-icon">
+                <i class="fas fa-home"></i>
+                <div class="status-indicator online" aria-label="System online"></div>
+            </div>
+            <div class="logo-text">
+                <h1>Smart Home</h1>
+                <span class="logo-subtitle">Energy Monitor</span>
+            </div>
+            <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar" aria-expanded="true">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+        </div>
+
+        <!-- User Profile Section -->
+        <div class="user-profile" role="complementary">
+            <% if (typeof user !== 'undefined' && user) { %>
+                <div class="user-avatar">
+                    <% if (user.image) { %>
+                        <img src="<%= user.image %>" alt="<%= user.name %>'s profile picture" loading="lazy">
+                    <% } else { %>
+                        <div class="avatar-placeholder" aria-hidden="true">
+                            <i class="fas fa-user"></i>
+                        </div>
+                    <% } %>
+                    <div class="user-status online" aria-label="User online"></div>
+                </div>
+                <div class="user-info">
+                    <span class="user-name" title="<%= user.name %>"><%= user.name %></span>
+                    <span class="user-role"><%= user.role %></span>
+                    <span class="user-last-active">Last active: Just now</span>
+                </div>
+                <div class="user-actions">
+                    <button class="user-action-btn" aria-label="User settings" onclick="window.location.href='/settings'">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                </div>
+            <% } else { %>
+                <div class="user-guest">
+                    <div class="avatar-placeholder" aria-hidden="true">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="user-info">
+                        <span class="user-name">Guest User</span>
+                        <span class="user-role">Please sign in</span>
+                    </div>
+                    <a href="/auth/login" class="login-btn" aria-label="Sign in to your account">
+                        <i class="fas fa-sign-in-alt"></i>
+                    </a>
+                </div>
+            <% } %>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="sidebar-stats" role="complementary" aria-label="System statistics">
+            <div class="stat-item">
+                <div class="stat-icon">
+                    <i class="fas fa-bolt"></i>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-value" id="current-power">--</span>
+                    <span class="stat-label">Current Power</span>
+                </div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-icon">
+                    <i class="fas fa-leaf"></i>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-value" id="today-energy">--</span>
+                    <span class="stat-label">Today's Energy</span>
+                </div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-icon">
+                    <i class="fas fa-dollar-sign"></i>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-value" id="today-cost">--</span>
+                    <span class="stat-label">Today's Cost</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Menu -->
+        <ul class="nav-links" role="menubar" aria-label="Application navigation">
+            <!-- Main Navigation -->
+            <li role="none" class="nav-section">
+                <span class="nav-section-label">Monitoring</span>
+            </li>
+            
+            <li role="none">
+                <a href="/" 
+                   class="nav-item <%= typeof currentPage !== 'undefined' && currentPage === 'dashboard' ? 'active' : '' %>" 
+                   role="menuitem" 
+                   aria-current="<%= typeof currentPage !== 'undefined' && currentPage === 'dashboard' ? 'page' : 'false' %>">
+                    <div class="nav-icon">
+                        <i class="fas fa-th-large"></i>
+                    </div>
+                    <span class="nav-text">Dashboard</span>
+                    <div class="nav-badge" id="dashboard-badge" style="display: none;"></div>
+                </a>
+            </li>
+
+            <li role="none">
+                <a href="/energy" 
+                   class="nav-item <%= typeof currentPage !== 'undefined' && currentPage === 'energy' ? 'active' : '' %>" 
+                   role="menuitem" 
+                   aria-current="<%= typeof currentPage !== 'undefined' && currentPage === 'energy' ? 'page' : 'false' %>">
+                    <div class="nav-icon">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <span class="nav-text">Energy Usage</span>
+                    <div class="nav-badge energy-badge" id="energy-badge" style="display: none;"></div>
+                </a>
+            </li>
+
+            <li role="none">
+                <a href="/temperature" 
+                   class="nav-item <%= typeof currentPage !== 'undefined' && currentPage === 'temperature' ? 'active' : '' %>" 
+                   role="menuitem" 
+                   aria-current="<%= typeof currentPage !== 'undefined' && currentPage === 'temperature' ? 'page' : 'false' %>">
+                    <div class="nav-icon">
+                        <i class="fas fa-thermometer-half"></i>
+                    </div>
+                    <span class="nav-text">Temperature & Humidity</span>
+                    <div class="nav-badge temp-badge" id="temp-badge" style="display: none;"></div>
+                </a>
+            </li>
+
+            <li role="none">
+                <a href="/lighting" 
+                   class="nav-item <%= typeof currentPage !== 'undefined' && currentPage === 'lighting' ? 'active' : '' %>" 
+                   role="menuitem" 
+                   aria-current="<%= typeof currentPage !== 'undefined' && currentPage === 'lighting' ? 'page' : 'false' %>">
+                    <div class="nav-icon">
+                        <i class="fas fa-lightbulb"></i>
+                    </div>
+                    <span class="nav-text">Lighting Control</span>
+                    <div class="nav-badge lighting-badge" id="lighting-badge" style="display: none;"></div>
+                </a>
+            </li>
+
+            <li role="none">
+                <a href="/appliances" 
+                   class="nav-item <%= typeof currentPage !== 'undefined' && currentPage === 'appliances' ? 'active' : '' %>" 
+                   role="menuitem" 
+                   aria-current="<%= typeof currentPage !== 'undefined' && currentPage === 'appliances' ? 'page' : 'false' %>">
+                    <div class="nav-icon">
+                        <i class="fas fa-plug"></i>
+                    </div>
+                    <span class="nav-text">Appliances</span>
+                    <div class="nav-badge appliance-badge" id="appliance-badge" style="display: none;"></div>
+                </a>
+            </li>
+
+            <!-- Device Management Section -->
+            <li role="none" class="nav-section">
+                <span class="nav-section-label">Device Management</span>
+            </li>
+
+            <li role="none">
+                <a href="/devices" 
+                   class="nav-item <%= typeof currentPage !== 'undefined' && currentPage === 'devices' ? 'active' : '' %>" 
+                   role="menuitem" 
+                   aria-current="<%= typeof currentPage !== 'undefined' && currentPage === 'devices' ? 'page' : 'false' %>">
+                    <div class="nav-icon">
+                        <i class="fas fa-list"></i>
+                    </div>
+                    <span class="nav-text">All Devices</span>
+                    <span class="device-count" id="device-count">0</span>
+                </a>
+            </li>
+
+            <li role="none">
+                <a href="/sensors" 
+                   class="nav-item <%= typeof currentPage !== 'undefined' && currentPage === 'sensors' ? 'active' : '' %>" 
+                   role="menuitem" 
+                   aria-current="<%= typeof currentPage !== 'undefined' && currentPage === 'sensors' ? 'page' : 'false' %>">
+                    <div class="nav-icon">
+                        <i class="fas fa-microchip"></i>
+                    </div>
+                    <span class="nav-text">Sensors</span>
+                    <span class="sensor-count" id="sensor-count">0</span>
+                </a>
+            </li>
+
+            <li role="none">
+                <a href="/automation" 
+                   class="nav-item <%= typeof currentPage !== 'undefined' && currentPage === 'automation' ? 'active' : '' %>" 
+                   role="menuitem" 
+                   aria-current="<%= typeof currentPage !== 'undefined' && currentPage === 'automation' ? 'page' : 'false' %>">
+                    <div class="nav-icon">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <span class="nav-text">Automation</span>
+                    <div class="nav-badge automation-badge" id="automation-badge" style="display: none;"></div>
+                </a>
+            </li>
+
+            <!-- Admin Section -->
+            <% if (typeof user !== 'undefined' && user && user.role === 'admin') { %>
+                <li role="none" class="nav-section">
+                    <span class="nav-section-label">Administration</span>
+                </li>
+
+                <li role="none">
+                    <a href="/admin/users" 
+                       class="nav-item <%= typeof currentPage !== 'undefined' && currentPage === 'users' ? 'active' : '' %>" 
+                       role="menuitem" 
+                       aria-current="<%= typeof currentPage !== 'undefined' && currentPage === 'users' ? 'page' : 'false' %>">
+                        <div class="nav-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <span class="nav-text">User Management</span>
+                    </a>
+                </li>
+
+                <li role="none">
+                    <a href="/admin/system" 
+                       class="nav-item <%= typeof currentPage !== 'undefined' && currentPage === 'system' ? 'active' : '' %>" 
+                       role="menuitem" 
+                       aria-current="<%= typeof currentPage !== 'undefined' && currentPage === 'system' ? 'page' : 'false' %>">
+                        <div class="nav-icon">
+                            <i class="fas fa-server"></i>
+                        </div>
+                        <span class="nav-text">System Settings</span>
+                    </a>
+                </li>
+
+                <li role="none">
+                    <a href="/admin/logs" 
+                       class="nav-item <%= typeof currentPage !== 'undefined' && currentPage === 'logs' ? 'active' : '' %>" 
+                       role="menuitem" 
+                       aria-current="<%= typeof currentPage !== 'undefined' && currentPage === 'logs' ? 'page' : 'false' %>">
+                        <div class="nav-icon">
+                            <i class="fas fa-clipboard-list"></i>
+                        </div>
+                        <span class="nav-text">System Logs</span>
+                    </a>
+                </li>
+            <% } %>
+
+            <!-- System Section -->
+            <li role="none" class="nav-section">
+                <span class="nav-section-label">System</span>
+            </li>
+
+            <li role="none">
+                <a href="/settings" 
+                   class="nav-item <%= typeof currentPage !== 'undefined' && currentPage === 'settings' ? 'active' : '' %>" 
+                   role="menuitem" 
+                   aria-current="<%= typeof currentPage !== 'undefined' && currentPage === 'settings' ? 'page' : 'false' %>">
+                    <div class="nav-icon">
+                        <i class="fas fa-cog"></i>
+                    </div>
+                    <span class="nav-text">Settings</span>
+                </a>
+            </li>
+
+            <li role="none">
+                <a href="/help" 
+                   class="nav-item" 
+                   role="menuitem">
+                    <div class="nav-icon">
+                        <i class="fas fa-question-circle"></i>
+                    </div>
+                    <span class="nav-text">Help & Support</span>
+                </a>
+            </li>
+
+            <li role="none">
+                <a href="/api-docs" 
+                   class="nav-item" 
+                   role="menuitem" 
+                   target="_blank">
+                    <div class="nav-icon">
+                        <i class="fas fa-code"></i>
+                    </div>
+                    <span class="nav-text">API Documentation</span>
+                    <i class="fas fa-external-link-alt external-icon"></i>
+                </a>
+            </li>
+        </ul>
+
+        <!-- System Status -->
+        <div class="system-status" role="complementary" aria-label="System status">
+            <div class="status-header">
+                <h3>System Status</h3>
+                <button class="status-refresh" id="statusRefresh" aria-label="Refresh status">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+            </div>
+            <div class="status-items">
+                <div class="status-item">
+                    <div class="status-indicator online" aria-label="System online"></div>
+                    <span class="status-label">System</span>
+                    <span class="status-value" id="system-status">Online</span>
+                </div>
+                <div class="status-item">
+                    <div class="status-indicator connected" aria-label="Database connected"></div>
+                    <span class="status-label">Database</span>
+                    <span class="status-value" id="database-status">Connected</span>
+                </div>
+                <div class="status-item">
+                    <div class="status-indicator online" aria-label="Sensors online"></div>
+                    <span class="status-label">Sensors</span>
+                    <span class="status-value" id="sensors-status"><span id="active-sensors">0</span>/<span id="total-sensors">0</span></span>
+                </div>
+                <div class="status-item">
+                    <div class="status-indicator online" aria-label="Devices online"></div>
+                    <span class="status-label">Devices</span>
+                    <span class="status-value" id="devices-status"><span id="online-devices">0</span>/<span id="total-devices">0</span></span>
+                </div>
+            </div>
+            <div class="status-footer">
+                <span class="uptime" id="system-uptime">Uptime: --</span>
+                <span class="last-update" id="last-update">Updated: Just now</span>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions" role="toolbar" aria-label="Quick actions">
+            <button class="quick-action" id="quick-power" aria-label="Power management">
+                <i class="fas fa-power-off"></i>
+                <span>Power</span>
+            </button>
+            <button class="quick-action" id="quick-add" aria-label="Add new device">
+                <i class="fas fa-plus"></i>
+                <span>Add</span>
+            </button>
+            <button class="quick-action" id="quick-refresh" aria-label="Refresh all data">
+                <i class="fas fa-sync-alt"></i>
+                <span>Refresh</span>
+            </button>
+            <button class="quick-action" id="quick-help" aria-label="Get help">
+                <i class="fas fa-life-ring"></i>
+                <span>Help</span>
+            </button>
+        </div>
     </div>
-    <div class="nav-links">
-        <a href="/" class="nav-item <%= currentPage === 'dashboard' ? 'active' : '' %>">
-            <i class="fas fa-th-large"></i>
-            <span>Dashboard</span>
-        </a>
-        <a href="'/energy" class="nav-item <%= currentPage === 'energy' ? 'active' : '' %>">
-            <i class="fas fa-bolt"></i>
-            <span>Energy Usage</span>
-        </a>
-        <a href="/temperature" class="nav-item <%= currentPage === 'temperature' ? 'active' : '' %>">
-            <i class="fas fa-temperature-high"></i>
-            <span>Temperature</span>
-        </a>
-        <a href="/lighting" class="nav-item <%= currentPage === 'lighting' ? 'active' : '' %>">
-            <i class="fas fa-sun"></i>
-            <span>Lighting</span>
-        </a>
-        <a href="/appliances" class="nav-item <%= currentPage === 'appliances' ? 'active' : '' %>">
-            <i class="fas fa-plug"></i>
-            <span>Appliances</span>
-        </a>
-        <a href="/settings" class="nav-item <%= currentPage === 'settings' ? 'active' : '' %>">
-            <i class="fas fa-cog"></i>
-            <span>Settings</span>
-        </a>
+
+    <!-- Collapsed Sidebar State -->
+    <div class="sidebar-collapsed" style="display: none;">
+        <div class="logo-collapsed">
+            <i class="fas fa-home"></i>
+        </div>
+        <ul class="nav-links-collapsed">
+            <li>
+                <a href="/" class="nav-icon-only" aria-label="Dashboard">
+                    <i class="fas fa-th-large"></i>
+                </a>
+            </li>
+            <li>
+                <a href="/energy" class="nav-icon-only" aria-label="Energy Usage">
+                    <i class="fas fa-bolt"></i>
+                </a>
+            </li>
+            <li>
+                <a href="/temperature" class="nav-icon-only" aria-label="Temperature">
+                    <i class="fas fa-thermometer-half"></i>
+                </a>
+            </li>
+            <li>
+                <a href="/lighting" class="nav-icon-only" aria-label="Lighting">
+                    <i class="fas fa-lightbulb"></i>
+                </a>
+            </li>
+            <li>
+                <a href="/appliances" class="nav-icon-only" aria-label="Appliances">
+                    <i class="fas fa-plug"></i>
+                </a>
+            </li>
+            <li>
+                <a href="/settings" class="nav-icon-only" aria-label="Settings">
+                    <i class="fas fa-cog"></i>
+                </a>
+            </li>
+        </ul>
     </div>
-</div>
+</nav>
+
+<!-- Sidebar JavaScript -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Sidebar toggle functionality
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebar = document.querySelector('.sidebar');
+        const mainContent = document.querySelector('.main-content');
+        
+        if (sidebarToggle) {
+            sidebarToggle.addEventListener('click', function() {
+                sidebar.classList.toggle('collapsed');
+                mainContent.classList.toggle('expanded');
+                
+                const isCollapsed = sidebar.classList.contains('collapsed');
+                this.setAttribute('aria-expanded', !isCollapsed);
+                this.querySelector('i').className = isCollapsed ? 
+                    'fas fa-chevron-right' : 'fas fa-chevron-left';
+                
+                // Update localStorage
+                localStorage.setItem('sidebarCollapsed', isCollapsed);
+                
+                // Dispatch custom event for other components
+                window.dispatchEvent(new CustomEvent('sidebarToggle', { 
+                    detail: { collapsed: isCollapsed } 
+                }));
+            });
+        }
+
+        // Load sidebar state from localStorage
+        const savedState = localStorage.getItem('sidebarCollapsed');
+        if (savedState === 'true') {
+            sidebar.classList.add('collapsed');
+            mainContent.classList.add('expanded');
+            sidebarToggle.querySelector('i').className = 'fas fa-chevron-right';
+            sidebarToggle.setAttribute('aria-expanded', 'false');
+        }
+
+        // Quick actions
+        document.getElementById('quick-refresh')?.addEventListener('click', function() {
+            this.classList.add('loading');
+            window.dispatchEvent(new CustomEvent('refreshData'));
+            setTimeout(() => this.classList.remove('loading'), 1000);
+        });
+
+        document.getElementById('quick-add')?.addEventListener('click', function() {
+            // Show add device modal
+            window.dispatchEvent(new CustomEvent('showAddDeviceModal'));
+        });
+
+        document.getElementById('quick-power')?.addEventListener('click', function() {
+            // Show power management
+            window.dispatchEvent(new CustomEvent('showPowerManagement'));
+        });
+
+        document.getElementById('quick-help')?.addEventListener('click', function() {
+            window.open('/help', '_blank');
+        });
+
+        // Status refresh
+        document.getElementById('statusRefresh')?.addEventListener('click', function() {
+            this.classList.add('loading');
+            window.dispatchEvent(new CustomEvent('refreshSystemStatus'));
+            setTimeout(() => this.classList.remove('loading'), 1000);
+        });
+
+        // Initialize system status
+        updateSystemStatus();
+
+        // Socket.io for real-time updates
+        const socket = io();
+        socket.on('system-status-update', function(data) {
+            updateSystemStatus(data);
+        });
+
+        socket.on('sensor-data-update', function(data) {
+            updateQuickStats(data);
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            // Ctrl/Cmd + B to toggle sidebar
+            if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
+                e.preventDefault();
+                sidebarToggle?.click();
+            }
+        });
+    });
+
+    function updateSystemStatus(data = null) {
+        // This would be populated with real data from your API
+        if (data) {
+            document.getElementById('system-status').textContent = data.system;
+            document.getElementById('database-status').textContent = data.database;
+            document.getElementById('active-sensors').textContent = data.sensors.active;
+            document.getElementById('total-sensors').textContent = data.sensors.total;
+            document.getElementById('online-devices').textContent = data.devices.online;
+            document.getElementById('total-devices').textContent = data.devices.total;
+            document.getElementById('system-uptime').textContent = `Uptime: ${data.uptime}`;
+            document.getElementById('last-update').textContent = `Updated: ${new Date().toLocaleTimeString()}`;
+        }
+    }
+
+    function updateQuickStats(data) {
+        if (data.power) {
+            document.getElementById('current-power').textContent = data.power;
+        }
+        if (data.energy) {
+            document.getElementById('today-energy').textContent = data.energy;
+        }
+        if (data.cost) {
+            document.getElementById('today-cost').textContent = data.cost;
+        }
+    }
+</script>

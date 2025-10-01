@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -9,4 +9,158 @@
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-    <div class="container">
+    <div class="container"> -->
+
+<!-- views/partials/header.ejs -->
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <!-- Character Encoding & Viewport -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    
+    <!-- Primary Meta Tags -->
+    <title><%= typeof title !== 'undefined' ? title : 'Smart Home Energy Monitoring System' %></title>
+    <meta name="description" content="<%= typeof description !== 'undefined' ? description : 'Monitor and optimize your home energy consumption with real-time analytics and smart device control.' %>">
+    <meta name="author" content="Smart Home Energy">
+    <meta name="keywords" content="smart home, energy monitoring, IoT, energy efficiency, home automation">
+    
+    <!-- Open Graph / Social Media Meta Tags -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="<%= typeof title !== 'undefined' ? title : 'Smart Home Energy Monitoring System' %>">
+    <meta property="og:description" content="Monitor and optimize your home energy consumption with real-time analytics.">
+    <meta property="og:image" content="/images/og-image.jpg">
+    <meta property="og:url" content="https://smarthome.example.com">
+    
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="<%= typeof title !== 'undefined' ? title : 'Smart Home Energy Monitoring' %>">
+    <meta name="twitter:description" content="Real-time energy monitoring and smart home automation.">
+    <meta name="twitter:image" content="/images/twitter-image.jpg">
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#0a2342">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Smart Home">
+    <link rel="apple-touch-icon" href="/images/icons/icon-192x192.png">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+    <link rel="manifest" href="/manifest.json">
+    
+    <!-- Preload Critical Resources -->
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style" crossorigin="anonymous">
+    <link rel="preload" href="/css/style.css" as="style">
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com/ajax/libs">
+    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+    
+    <!-- CSS Resources -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" 
+        integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" 
+        crossorigin="anonymous" referrerpolicy="no-referrer">
+    <link rel="stylesheet" href="/css/style.css?v=1.0">
+    
+    <!-- Conditional CSS for specific pages -->
+    <% if (currentPage === 'dashboard' || currentPage === 'energy') { %>
+        <link rel="stylesheet" href="/css/charts.css?v=1.0">
+    <% } %>
+    
+    <!-- Additional CSS blocks for page-specific styles -->
+    <% if (typeof additionalStyles !== 'undefined') { %>
+        <% additionalStyles.forEach(function(style) { %>
+            <link rel="stylesheet" href="<%= style %>">
+        <% }); %>
+    <% } %>
+    
+    <!-- Inline Critical CSS (for above-the-fold content) -->
+    <style>
+        /* Critical CSS for initial render */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+        
+        /* Loading state for initial page load */
+        .app-loading {
+            opacity: 0;
+            transition: opacity 0.3s ease-in;
+        }
+        
+        .app-loaded {
+            opacity: 1;
+        }
+        
+        /* Basic layout to prevent CLS */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        .sidebar {
+            width: 280px;
+            flex-shrink: 0;
+        }
+        
+        .main-content {
+            flex: 1;
+            min-width: 0;
+        }
+    </style>
+    
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Smart Home Energy Monitoring System",
+        "description": "Real-time energy monitoring and smart home automation platform",
+        "url": "https://smarthome.example.com",
+        "applicationCategory": "UtilityApplication",
+        "operatingSystem": "Web Browser",
+        "permissions": "browser",
+        "author": {
+            "@type": "Organization",
+            "name": "Smart Home Energy"
+        },
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+        }
+    }
+    </script>
+</head>
+<body class="app-loading" data-page="<%= typeof currentPage !== 'undefined' ? currentPage : 'default' %>">
+    <!-- Skip to main content link for accessibility -->
+    <a href="#main-content" class="sr-only">Skip to main content</a>
+    
+    <!-- Progressive Web App App Shell -->
+    <div id="app-shell">
+        <!-- Loading Spinner -->
+        <div id="loading-spinner" class="loading-spinner" style="display: none;">
+            <div class="spinner"></div>
+            <p>Loading Smart Home System...</p>
+        </div>
+
+        <!-- Offline Indicator -->
+        <div id="offline-indicator" class="offline-indicator" style="display: none;">
+            <i class="fas fa-wifi-slash"></i>
+            <span>You are currently offline</span>
+        </div>
+
+        <!-- Notification Container -->
+        <div id="notification-container" class="notification-container"></div>
+
+        <!-- Main App Container -->
+        <div class="container">

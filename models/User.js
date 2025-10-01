@@ -1,6 +1,5 @@
-// models/User.js
 module.exports = (sequelize, DataTypes) => {
-  return sequelize.define('User', {
+  const User = sequelize.define('User', {
     id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
@@ -35,6 +34,21 @@ module.exports = (sequelize, DataTypes) => {
     timestamps: true,
     createdAt: 'created_at',
     updatedAt: 'updated_at',
-    indexes: [{ unique: true, fields: ['email'] }]
+    indexes: [
+      { 
+        unique: true, 
+        fields: ['email'] 
+      },
+      {
+        fields: ['role']
+      }
+    ]
   });
+
+  // Add associations
+  User.associate = function(models) {
+    // Associations are defined in models/index.js
+  };
+
+  return User;
 };
