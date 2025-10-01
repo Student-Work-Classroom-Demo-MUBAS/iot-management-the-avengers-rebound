@@ -136,26 +136,26 @@ app.set('views', path.join(__dirname, 'views'));
 // Database connection and synchronization
 (async () => {
   try {
-    console.log('🔄 Testing database connection...');
+    console.log('Testing database connection...');
     const isConnected = await testConnection();
     
     if (!isConnected) {
-      console.error('❌ Failed to connect to database. Exiting...');
+      console.error('Failed to connect to database. Exiting...');
       process.exit(1);
     }
 
-    console.log('✅ Database connection successful');
+    console.log('Database connection successful');
     
     const forceSync = process.env.NODE_ENV === 'development' && process.env.FORCE_SYNC === 'true';
     if (forceSync) {
-      console.log('🔄 Force syncing database...');
+      console.log('Force syncing database...');
     }
     
     await syncDatabase(forceSync);
-    console.log('✅ Database synchronization completed');
+    console.log('Database synchronization completed');
     
   } catch (error) {
-    console.error('💥 Database initialization failed:', error);
+    console.error('Database initialization failed:', error);
     process.exit(1);
   }
 })();
@@ -182,7 +182,7 @@ io.on('connection', (socket) => {
   });
   
   socket.on('error', (error) => {
-    console.error(`💥 Socket error for ${socket.id}:`, error);
+    console.error(`Socket error for ${socket.id}:`, error);
   });
 });
 
@@ -332,7 +332,7 @@ app.post('/webhook/sensor-data', express.json(), async (req, res) => {
 
 // Global error handling middleware
 app.use((err, req, res, next) => {
-  console.error('💥 Global error handler:', err);
+  console.error('Global error handler:', err);
   
   if (err.code === 'EBADCSRFTOKEN') {
     return res.status(403).json({
@@ -405,9 +405,9 @@ function gracefulShutdown(signal) {
       process.exit(1);
     }
     
-    console.log('✅ HTTP server closed');
-    console.log('✅ Database connections closed');
-    console.log('👋 Graceful shutdown completed');
+    console.log('HTTP server closed');
+    console.log('Database connections closed');
+    console.log('Graceful shutdown completed');
     process.exit(0);
   });
   
@@ -420,15 +420,15 @@ function gracefulShutdown(signal) {
 // Start server
 server.listen(port, () => {
   console.log(`
-🚀 Smart Home Energy Monitoring System Started!
-📍 Server running at http://localhost:${port}
-📚 API documentation available at http://localhost:${port}/api-docs
-🌍 Environment: ${process.env.NODE_ENV || 'development'}
+Smart Home Energy Monitoring System Started!
+Server running at http://localhost:${port}
+API documentation available at http://localhost:${port}/api-docs
+Environment: ${process.env.NODE_ENV || 'development'}
   `);
   
   if (process.env.NODE_ENV === 'development') {
-    console.log(`🗄️  Database initialization available at http://localhost:${port}/init-db`);
-    console.log(`❤️  Health check available at http://localhost:${port}/health`);
+    console.log(`Database initialization available at http://localhost:${port}/init-db`);
+    console.log(`Health check available at http://localhost:${port}/health`);
   }
 });
 
