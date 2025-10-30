@@ -1,38 +1,27 @@
-// models/Device.js
+const { Model, DataTypes } = require('sequelize');
+const { sequelize } = require('../config/database');
+
 module.exports = (sequelize, DataTypes) => {
-  return sequelize.define('Device', {
-    id: {
-      type: DataTypes.INTEGER,
-      primaryKey: true,
-      autoIncrement: true
-    },
+  const Device = sequelize.define('Device', {
     name: {
-      type: DataTypes.STRING(100),
+      type: DataTypes.STRING,
       allowNull: false
     },
-    model: {
-      type: DataTypes.STRING(100),
+    type: {
+      type: DataTypes.STRING,
       allowNull: false
     },
     location: {
-      type: DataTypes.STRING(100),
-      allowNull: false
-    },
-    power: {
-      type: DataTypes.STRING(20),
-      allowNull: false
+      type: DataTypes.STRING,
+      defaultValue: 'unknown'
     },
     status: {
-      type: DataTypes.ENUM('ON', 'OFF'),
-      allowNull: false,
-      defaultValue: 'OFF'
-    },
-    icon: {
-      type: DataTypes.STRING(50),
-      allowNull: false
+      type: DataTypes.BOOLEAN,
+      defaultValue: false
     }
   }, {
-    tableName: 'devices',
-    timestamps: true
+    tableName: 'devices'
   });
+
+  return Device;
 };

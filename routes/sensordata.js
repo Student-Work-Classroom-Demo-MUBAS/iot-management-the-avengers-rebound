@@ -1,3 +1,4 @@
+// routes/sensordata.js
 const express = require('express');
 const router = express.Router();
 
@@ -23,3 +24,15 @@ router.get('/', async (req, res) => {
 });
 
 module.exports = router;
+
+router.get('/latest', async (req, res) => {
+  try {
+    const data = await SensorData.findAll({
+      order: [['timestamp', 'DESC']],
+      limit: 20
+    });
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});

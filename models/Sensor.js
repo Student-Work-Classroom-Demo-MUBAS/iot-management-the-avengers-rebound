@@ -1,25 +1,44 @@
-// models/Sensor.js
+const { Model, DataTypes } = require('sequelize');
+const { sequelize } = require('../config/database');
+
+class Sensor extends Model {}
+
+Sensor.init({
+  name: {
+    type: DataTypes.STRING,
+    allowNull: false
+  },
+  type: {
+    type: DataTypes.STRING,
+    allowNull: false
+  },
+  location: {
+    type: DataTypes.STRING,
+    defaultValue: 'unknown'
+  }
+}, {
+  sequelize,
+  modelName: 'Sensor',
+  tableName: 'sensors'
+});
+
 module.exports = (sequelize, DataTypes) => {
-  return sequelize.define('Sensor', {
-    id: {
-      type: DataTypes.INTEGER,
-      primaryKey: true,
-      autoIncrement: true
+  const Sensor = sequelize.define('Sensor', {
+    name: {
+      type: DataTypes.STRING,
+      allowNull: false
     },
     type: {
-      type: DataTypes.STRING(50),
+      type: DataTypes.STRING,
       allowNull: false
     },
     location: {
-      type: DataTypes.STRING(100),
-      allowNull: false
-    },
-    status: {
-      type: DataTypes.ENUM('ACTIVE', 'INACTIVE'),
-      allowNull: false,
-      defaultValue: 'ACTIVE'
+      type: DataTypes.STRING,
+      defaultValue: 'unknown'
     }
   }, {
     tableName: 'sensors'
   });
+
+  return Sensor;
 };
